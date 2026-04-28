@@ -1,5 +1,7 @@
 using UnityEngine;
 
+// 상태 값 관리
+
 public enum PlayerMoveState
 { 
     Idle, Walk, Run, Crouch, Jump

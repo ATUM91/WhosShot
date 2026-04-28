@@ -15,7 +15,7 @@ public class SettingManager : MonoBehaviour
     [SerializeField] public float sfxVolume = 1f;      // 효과음
 
     [Header("밝기 조절")]
-    [SerializeField] public float brightness = 1f;          // 밝기
+    [SerializeField] public float brightness = 1f;     // 밝기
 
     [Header("크로스헤어")]
     [SerializeField] public int crosshairIndex = 0;    // 크로스헤어 종류
