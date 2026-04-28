@@ -35,27 +35,4 @@ public class UIManager : MonoBehaviour
 
         crosshairImage.sprite = crosshairSprites[currentIndex];
     }
-
-    #region UI È£Ãâ¿ë
-    public void SetCrosshair(int index)
-    { 
-        SettingManager.Instance.crosshairIndex = index;
-    }
-
-    public void SetMouseSensitivity(float value)
-    { 
-        SettingManager.Instance.mouseSensitivity = value;
-    }
-
-    public void SetBrightness(float value)
-    { 
-        SettingManager.Instance.brightness = value;
-        SettingManager.Instance.ApplySetting();
-    }
-
-    public void OnClickSave()
-    {
-        SettingManager.Instance.SettingSave();
-    }
-    #endregion
 }

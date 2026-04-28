@@ -44,9 +44,12 @@ public class PlayerController : MonoBehaviour
     // 매프레임 실행
     void Update()
     {
-        MouseLook();    // 시점 처리
-        Movement();     // 이동 + 점프
-        Crouch();       // 앉기 처리
+        MouseLook(); // 시점 처리
+        Gravity();   // 중력 먼저 계산
+        Jump();      // 점프
+        State();     // 상태 결정
+        Move();      // 이동
+        Crouch();    // 앉기
     }
 
     // 마우스 시점 처리 / 좌우 - 플레이어 회전 / 상하 - 카메라 회전
@@ -67,74 +70,92 @@ public class PlayerController : MonoBehaviour
     }
 
     // 이동 + 점프 + 상태 결정
-    private void Movement()
+    private void State()
     {
         // 입력 (-1 ~ 1)
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
-        // 바닥 체크
+
         bool isGround = characterController.isGrounded;
 
-        // 상태 결정 / PlayerState 사용
-        if (isGround)
+        // 공중이면 점프 상태 유지
+        if (!isGround)
         {
-            if (Input.GetKey(KeyCode.LeftControl)) // L.Ctrl키 - 앉기
-            {
-                playerState.currentState = PlayerMoveState.Crouch;
-            }
-
-            else if (Input.GetKey(KeyCode.LeftShift)) // L.Shift - 달리기
-            {
-                playerState.currentState = PlayerMoveState.Run;
-            }
-
-            else if (x != 0 || z != 0) // x 또는 z 의 입력이 없지 않다면, 걷기
-            {
-                playerState.currentState = PlayerMoveState.Walk;
-            }
-
-            else // 대기
-            {
-                playerState.currentState = PlayerMoveState.Idle;
-            }
+            playerState.currentState = PlayerMoveState.Jump;
+            return;
         }
 
-        // PlayerState에 따른 속도 가져오기
+        if (Input.GetKey(KeyCode.LeftControl)) // L.Ctrl키 - 앉기
+        {
+            playerState.currentState = PlayerMoveState.Crouch;
+        }
+        else if (Input.GetKey(KeyCode.LeftShift)) // L.Shift - 달리기
+        {
+            playerState.currentState = PlayerMoveState.Run;
+        }
+        else if (x != 0 || z != 0) // x 또는 z 의 입력이 없지 않다면, 걷기
+        {
+            playerState.currentState = PlayerMoveState.Walk;
+        }
+        else // 대기
+        {
+            playerState.currentState = PlayerMoveState.Idle;
+        }
+    }
+
+    private void Move()
+    {
+        // 입력 (-1 ~ 1)
+        float x = Input.GetAxis("Horizontal");
+        float z = Input.GetAxis("Vertical");
+
         float speed = playerState.GetSpeed();
-        // 이동 방향 계산 (플레이어 기준)
+
         Vector3 move = transform.right * x + transform.forward * z;
+        // 대각선 이동 속도 고정
+        move = Vector3.ClampMagnitude(move, 1f);
 
-        // 점프 처리
-        if (isGround && yVelocity < 0)
-        {
-            yVelocity = -2f; // 바닥에 붙이기
-
-            if (Input.GetKeyDown(KeyCode.Space)) // 점프 입력
-            {
-                // 점프 힘 계산
-                yVelocity = Mathf.Sqrt(jumpForce * -2f * gravity);
-                // 상태 변경
-                playerState.currentState = PlayerMoveState.Jump;
-            }
-        }
-        // 중력 적용
-        yVelocity += gravity * Time.deltaTime;
-        // 최종 이동 벡터
+        // 중력 포함 이동
         Vector3 velocity = move * speed + Vector3.up * yVelocity;
-        // 실제 이동
         characterController.Move(velocity * Time.deltaTime);
     }
-    
+
+    // 점프 처리
+    private void Jump()
+    {
+        // 점프 처리
+        if (characterController.isGrounded && Input.GetKeyDown(KeyCode.Space))
+        {
+            // 점프 힘 계산
+            yVelocity = Mathf.Sqrt(jumpForce * -2f * gravity);
+        }
+
+    }
+
+    // 중력 처리
+    private void Gravity()
+    {
+        if (characterController.isGrounded && yVelocity < 0)
+        {
+            yVelocity = -2f; // 바닥에 붙이기
+        }
+        yVelocity += gravity * Time.deltaTime;
+    }
+
     // 앉기 처리 (높이 변경)
     private void Crouch()
     {
         if (playerState.currentState == PlayerMoveState.Crouch)
         {
             characterController.height = crouchHeight;
+            // 캐릭터 센터 이동 / 땅에 박힘 금지
+            characterController.center = new Vector3(0, crouchHeight / 2f, 0);
         }
         else
         {
             characterController.height = normalHeight;
+            // 캐릭터 센터 이동 / 땅에 박힘 금지
+            characterController.center = new Vector3(0, normalHeight / 2f, 0);
         }
     }
 }
