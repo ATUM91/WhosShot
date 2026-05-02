@@ -13,21 +13,15 @@ public class SoundManager : MonoBehaviour
 
     void Awake()
     {
-        // 싱글톤 설정
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
+        // 싱글톤 설정 / 중복 생성 방지
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
+            return;
         }
+        Instance = this;
         DontDestroyOnLoad(gameObject);
-    }
-
-    void Update()
-    {
-        ApplyVolume(); // 실시간 볼륨 적용
+        ApplyVolume();
     }
 
     // 볼륨 적용
@@ -35,9 +29,10 @@ public class SoundManager : MonoBehaviour
     { 
         // SettingManager 인스턴스 가져오기
         SettingManager setting = SettingManager.Instance;
-        // 전체 볼륨 * 개별 볼륨
-        bgmSource.volume = setting.masterVolume * setting.bgmVolume;
-        sfxSource.volume = setting.masterVolume * setting.sfxVolume;
+        // 초기화 순서 꼬일 때를 방지
+        if (setting == null) return;
+        // BGM 볼륨
+        bgmSource.volume = setting.bgmVolume;
     }
 
     // SFX 재생 함수

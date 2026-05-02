@@ -32,18 +32,21 @@ public class LobbyUI : MonoBehaviour
     // 스텔스 모드 선택
     public void OnClickStealthSelect()
     {
+        CloseAllPanel();
         stealthMapSelectPanel.SetActive(true);
     }
     
     // 팀데스매치 모드 선택
     public void OnClickTDMSelect()
-    { 
+    {
+        CloseAllPanel();
         tdmMapSelectPanel.SetActive(true);
     }
     
     // 무기고 열기
     public void OnClickWeaponSelect()
     {
+        CloseAllPanel();
         weaponSelectPanel.SetActive(true);
     }
     #endregion
@@ -51,19 +54,22 @@ public class LobbyUI : MonoBehaviour
     #region 팝업 창
     // 설정 창 열기
     public void OnClickSetting()
-    { 
+    {
+        CloseAllPanel();
         settingPanel.SetActive(true);
     }
     
     // 도움말 창 열기
     public void OnClickHelp()
-    { 
+    {
+        CloseAllPanel();
         helpPanel.SetActive(true);
     }
     
     // 종료 확인 창 열기
     public void OnClickQuitInfo()
-    { 
+    {
+        CloseAllPanel();
         quitPanel.SetActive(true);
     }
     #endregion
@@ -74,12 +80,6 @@ public class LobbyUI : MonoBehaviour
     { 
         CloseAllPanel();
         mainPanel.SetActive(true);
-    }
-
-    // 팝업창 닫기 (설정 / 도움말 / 종료확인)
-    public void OnClickClosePopup(GameObject panel)
-    { 
-        panel.SetActive(false);
     }
 
     // 게임 종료
