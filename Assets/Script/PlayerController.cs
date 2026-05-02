@@ -54,7 +54,7 @@ public class PlayerController : MonoBehaviour
 
     // 마우스 시점 처리 / 좌우 - 플레이어 회전 / 상하 - 카메라 회전
     private void MouseLook()
-    { 
+    {
         // 설정 값에서 마우스 감도 가져오기
         float sensitivity = SettingManager.Instance.mouseSensitivity;
         // 마우스 입력
