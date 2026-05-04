@@ -6,6 +6,9 @@ public class SettingManager : MonoBehaviour
 {
     public static SettingManager Instance;
 
+    [Header("선택된 BGM")]
+    [SerializeField] public int bgmIndex = 0;
+
     [Header("오디오 볼륨")]
     [SerializeField] public float bgmVolume = 1f;      // 배경음
     [SerializeField] public float sfxVolume = 1f;      // 효과음
@@ -39,6 +42,26 @@ public class SettingManager : MonoBehaviour
         RenderSettings.ambientLight = Color.white * brightness;
     }
 
+    // BGM 볼륨 조절
+    public void SetBGMVolume(float value)
+    {
+        bgmVolume = value;
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.RefreshVolume(bgmVolume, sfxVolume);
+        }
+    }
+
+    // SFX 볼륨 조절
+    public void SetSFXVolume(float value)
+    {
+        sfxVolume = value;
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.RefreshVolume(bgmVolume, sfxVolume);
+        }
+    }
+
     // 설정 저장
     public void SettingSave()
     {
@@ -47,6 +70,7 @@ public class SettingManager : MonoBehaviour
         PlayerPrefs.SetFloat("SFX", sfxVolume);
         PlayerPrefs.SetFloat("Brightness", brightness);
         PlayerPrefs.SetInt("Crosshair", crosshairIndex);
+        PlayerPrefs.SetInt("BGM_Index", bgmIndex);
 
         PlayerPrefs.Save(); // 저장
     }
@@ -59,5 +83,6 @@ public class SettingManager : MonoBehaviour
         sfxVolume = PlayerPrefs.GetFloat("SFX", 1f);
         brightness = PlayerPrefs.GetFloat("Brightness", 1f);
         crosshairIndex = PlayerPrefs.GetInt("Crosshair", 0);
+        bgmIndex = PlayerPrefs.GetInt("BGM_Index", 0);
     }
 }

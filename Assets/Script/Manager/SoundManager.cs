@@ -11,6 +11,9 @@ public class SoundManager : MonoBehaviour
     [SerializeField] private AudioSource bgmSource; // 배경음
     [SerializeField] private AudioSource sfxSource; // 효과음
 
+    [Header("BGM 목록")]
+    [SerializeField] private AudioClip[] bgmList;   // 배경음 목록
+
     void Awake()
     {
         // 싱글톤 설정 / 중복 생성 방지
@@ -21,23 +24,42 @@ public class SoundManager : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
-        ApplyVolume();
     }
 
-    // 볼륨 적용
-    private void ApplyVolume()
-    { 
-        // SettingManager 인스턴스 가져오기
-        SettingManager setting = SettingManager.Instance;
-        // 초기화 순서 꼬일 때를 방지
-        if (setting == null) return;
-        // BGM 볼륨
-        bgmSource.volume = setting.bgmVolume;
+    void Start()
+    {
+        SettingManager settingManager = SettingManager.Instance;
+        if (settingManager == null) return;
+        RefreshVolume(settingManager.bgmVolume, settingManager.sfxVolume);
+        PlayBGM();
+    }
+
+    // 볼륨 갱신
+    public void RefreshVolume(float bgm, float sfx)
+    {
+        bgmSource.volume = bgm;
+        sfxSource.volume = sfx;
+    }
+
+    // BGM 재생 함수
+    public void PlayBGM()
+    {
+        if (SettingManager.Instance == null) return;
+        if (bgmList == null || bgmList.Length == 0) return;
+
+        int index = SettingManager.Instance.bgmIndex;
+
+        if (bgmSource.clip == bgmList[index]) return;
+
+        bgmSource.clip = bgmList[index];
+        bgmSource.loop = true;
+        bgmSource.Play();
     }
 
     // SFX 재생 함수
     public void PlaySFX(AudioClip audioClip)
-    { 
+    {
+        if (audioClip == null) return;
         sfxSource.PlayOneShot(audioClip);
     }
 }
