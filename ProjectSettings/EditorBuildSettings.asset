@@ -4,5 +4,20 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Scene Title.unity
+    guid: 119900c048fa0464199aa8e085a242ae
+  - enabled: 1
+    path: Assets/Scenes/Scene Loading.unity
+    guid: 33c1493c094f0784baa6d8f9efd41cca
+  - enabled: 1
+    path: Assets/Scenes/Scene Lobby.unity
+    guid: 5f411b8f122fd1545af240488927a1fb
+  - enabled: 1
+    path: Assets/Scenes/Stealth_Oil Storage.unity
+    guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 1
+    path: Assets/Scenes/TDM_City.unity
+    guid: 9176a07e8d73931418d36476d2c41119
   m_configObjects: {}
