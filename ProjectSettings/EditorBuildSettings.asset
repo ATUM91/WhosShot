@@ -21,6 +21,6 @@ EditorBuildSettings:
     path: Assets/Scenes/Stealth_Oil Storage.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
   - enabled: 1
-    path: Assets/Scenes/TDM_City.unity
+    path: Assets/Scenes/TDM_Supply Center.unity
     guid: 9176a07e8d73931418d36476d2c41119
   m_configObjects: {}

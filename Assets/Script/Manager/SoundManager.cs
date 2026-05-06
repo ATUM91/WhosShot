@@ -49,6 +49,11 @@ public class SoundManager : MonoBehaviour
 
         int index = SettingManager.Instance.bgmIndex;
 
+        if (index < 0 || index >= bgmList.Length)
+        { 
+            index = 0;
+        }
+
         if (bgmSource.clip == bgmList[index]) return;
 
         bgmSource.clip = bgmList[index];
