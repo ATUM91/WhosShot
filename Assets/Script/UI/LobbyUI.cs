@@ -7,10 +7,10 @@ using UnityEngine.UI;
 public class LobbyUI : MonoBehaviour
 {
     [SerializeField] private Toggle oilStorageToggle;
-    [SerializeField] private Toggle cityToggle;
+    [SerializeField] private Toggle supplyCenterToggle;
 
     [SerializeField] private string oilStorageSceneName;
-    [SerializeField] private string citySceneName;
+    [SerializeField] private string supplyCenterSceneName;
 
     public GameObject mainPanel;                // 로비(메인)
     public GameObject stealthMapSelectPanel;    // 스텔스 맵 선택 패널
@@ -50,7 +50,7 @@ public class LobbyUI : MonoBehaviour
         tdmMapSelectPanel.SetActive(true);
 
         // 이전 선택 값 초기화 / 토글 꼬임 방지
-        cityToggle.isOn = false;
+        supplyCenterToggle.isOn = false;
     }
     
     // 무기고 열기
@@ -106,9 +106,9 @@ public class LobbyUI : MonoBehaviour
         }
         else if (tdmMapSelectPanel.activeSelf)
         {
-            if (cityToggle.isOn)
+            if (supplyCenterToggle.isOn)
             {
-                SceneLoading.LoadTo(citySceneName);
+                SceneLoading.LoadTo(supplyCenterSceneName);
                 return;
             }
         }

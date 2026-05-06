@@ -956,13 +956,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 705507993}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
-  m_LocalPosition: {x: -5.42, y: 7.07, z: 2.49}
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 20, y: 20, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!1001 &718871951
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2421,15 +2421,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 522156422293777982, guid: 2a48fe2f4b44e5440a69788b7103ba85, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.4724889
+      value: -1.0418048
       objectReference: {fileID: 0}
     - target: {fileID: 522156422293777982, guid: 2a48fe2f4b44e5440a69788b7103ba85, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -22.529505
+      value: 0.5027627
       objectReference: {fileID: 0}
     - target: {fileID: 522156422293777982, guid: 2a48fe2f4b44e5440a69788b7103ba85, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 13.455485
+      value: 14.216554
       objectReference: {fileID: 0}
     - target: {fileID: 522156422293777982, guid: 2a48fe2f4b44e5440a69788b7103ba85, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2462,6 +2462,18 @@ PrefabInstance:
     - target: {fileID: 4108320464177439834, guid: 2a48fe2f4b44e5440a69788b7103ba85, type: 3}
       propertyPath: m_Name
       value: Floor
+      objectReference: {fileID: 0}
+    - target: {fileID: 8787341954804521448, guid: 2a48fe2f4b44e5440a69788b7103ba85, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.0000021457672
+      objectReference: {fileID: 0}
+    - target: {fileID: 8787341954804521448, guid: 2a48fe2f4b44e5440a69788b7103ba85, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.0000013411045
+      objectReference: {fileID: 0}
+    - target: {fileID: 8787341954804521448, guid: 2a48fe2f4b44e5440a69788b7103ba85, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 5.0000057
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
