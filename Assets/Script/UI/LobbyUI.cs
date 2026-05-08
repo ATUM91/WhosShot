@@ -17,6 +17,10 @@ public class LobbyUI : MonoBehaviour
     public GameObject tdmMapSelectPanel;        // 팀데스매치 맵 선택 패널
     public GameObject weaponSelectPanel;        // 무기고 선택 패널
 
+    public GameObject pistolPanel;  // 권총 패널
+    public GameObject riflePanel;   // 소총 패널
+    public GameObject shotgunPanel; // 샷건 패널
+
     public GameObject helpPanel;    // 도움말 패널
     public GameObject settingPanel; // 설정 패널
     public GameObject quitPanel;    // 종료 확인 패널
@@ -58,6 +62,34 @@ public class LobbyUI : MonoBehaviour
     {
         CloseAllPanel();
         weaponSelectPanel.SetActive(true);
+        // 무기고 열 때 기본은 권총 탭
+        OnClickPistolTap();
+    }
+    #endregion
+
+    #region 무기 카테고리 창
+    // 권총 탭
+    public void OnClickPistolTap()
+    { 
+        pistolPanel.SetActive(true);
+        riflePanel.SetActive(false);
+        shotgunPanel.SetActive(false);
+    }
+
+    // 소총 탭
+    public void OnClickRifleTap()
+    {
+        pistolPanel.SetActive(false);
+        riflePanel.SetActive(true);
+        shotgunPanel.SetActive(false);
+    }
+
+    // 샷건 탭
+    public void OnClickShotgunTap()
+    {
+        pistolPanel.SetActive(false);
+        riflePanel.SetActive(false);
+        shotgunPanel.SetActive(true);
     }
     #endregion
 

@@ -1,21 +1,66 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 // UI에서 설정 값 변경 처리
 
 public class SettingUI : MonoBehaviour
 {
+    [Header("오디오 UI")]
+    [SerializeField] private Slider bgmSlider;
+    [SerializeField] private Slider sfxSlider;
+
+    [Header("해상도 UI")]
+    [SerializeField] private TMP_Dropdown resolutionDropdown;
+
+    [Header("화면 모드 UI")]
+    [SerializeField] private TMP_Dropdown screenModeDropdown;
+
+    void Start()
+    {
+        InitResolutionDropdown();
+        InitScreenModeDropdown();
+    }
+
+    // 해상도 초기화
+    private void InitResolutionDropdown()
+    {
+        resolutionDropdown.ClearOptions();  // 기존 옵션 제거
+        List<string> options = new List<string>();  // 드롭다운에 표시할 목록
+        Vector2Int[] resolutions = SettingManager.Instance.GetResolutions();
+
+        // 드롭다운 문자열 생성
+        for (int i = 0; i < resolutions.Length; i++)
+        { 
+            string option = resolutions[i].x + "x" + resolutions[i].y;
+            options.Add(option);    // 드롭다운 문자열 추가
+        }
+        resolutionDropdown.AddOptions(options); // 옵션 추가
+        resolutionDropdown.value = SettingManager.Instance.resolutionIndex; // 저장된 값 적용
+
+        resolutionDropdown.RefreshShownValue();
+    }
+
+    // 화면모드 초기화
+    private void InitScreenModeDropdown()
+    {
+        screenModeDropdown.value = SettingManager.Instance.screenModeIndex;
+        screenModeDropdown.RefreshShownValue();
+    }
+
+    #region UI 호출 함수
     // 배경음 조절
     public void SetBGMVolume(float value)
-    { 
-        SettingManager.Instance.bgmVolume = value;
-        SettingManager.Instance.ApplySetting(); // 즉시 적용
+    {
+        Debug.Log("Slider Value : " + value);
+        SettingManager.Instance.SetBGMVolume(value); // 즉시 적용
     }
 
     // 효과음 조절
     public void SetSFXVolume(float value)
     { 
-        SettingManager.Instance.sfxVolume = value;
-        SettingManager.Instance.ApplySetting(); // 즉시 적용
+        SettingManager.Instance.SetSFXVolume(value); // 즉시 적용
     }
 
     // 마우스 감도 조절
@@ -28,13 +73,29 @@ public class SettingUI : MonoBehaviour
     public void SetBrightness(float value)
     { 
         SettingManager.Instance.brightness = value;
-        SettingManager.Instance.ApplySetting(); // 즉시 적용
+        SettingManager.Instance.ApplyBrightness(); // 즉시 적용
+    }
+
+    // 해상도 변경
+    public void SetResolution(int index)
+    {
+        SettingManager.Instance.SetResolution(index);
+    }
+
+    // 화면 모드 변경
+    public void SetScreenMode(int index)
+    { 
+        SettingManager.Instance.SetScreenMode(index);
     }
 
     // 크로스헤어 변경
     public void SetCrosshair(int index)
     { 
         SettingManager.Instance.crosshairIndex = index;
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ApplyCrosshair();
+        }
     }
 
     // 저장 버튼
@@ -42,4 +103,5 @@ public class SettingUI : MonoBehaviour
     { 
         SettingManager.Instance.SettingSave();
     }
+    #endregion
 }

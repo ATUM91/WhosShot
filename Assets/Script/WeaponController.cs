@@ -1,58 +1,45 @@
 using UnityEngine;
 
-// 무기 관리
-// 발사 처리
-// 연사 / 샷건 / 소음 처리
+// 장착 무기 발사 처리
+// WeaponData(SO) 기반 무기 데이터 사용
+// 단발 / 샷건 분기
+// 애니메이션 호출
+// Raycast 판정
+// 입력처리X / 무기교체X / 재장전X
 
 public class WeaponController : MonoBehaviour
 {
-    public enum WeaponType
+    [Header("현재 무기 SO 데이터")]
+    [SerializeField] private WeaponData weaponData; // 현재 무기 타입
+
+    [Header("참조")]
+    [SerializeField] private Camera playerCamera;   // 발사 기준 카메라
+    [SerializeField] private Animator animator;        // 플레이어 애니메이션
+    [SerializeField] private Battle battle;         // 데미지 계산 전달용
+
+    private int currentAmmo;
+    private float nextFireTime;         // 다음 발사 가능 시간 / 연사 제한
+    private bool isSilencer;
+
+    void Start()
     {
-        Pistol,
-        Rifle,
-        Shotgun
-    }
-
-    [Header("카메라")]
-    [SerializeField] private Camera playerCamera;   // 발사 기준 -> 카메라
-
-    [Header("현재 무기")]
-    [SerializeField] private WeaponType weaponType; // 현재 무기 타입
-
-    [Header("무기 스펙")]
-    [SerializeField] private float damage = 20f;    // 기본 데미지
-    [SerializeField] private float range = 100f;    // 사거리
-    [SerializeField] private float fireRate = 10f;  // 초당 발사 수
-
-    [Header("샷건")]
-    [SerializeField] private int pelletCount = 8; // 샷건 탄 수
-    [SerializeField] private float spread = 0.2f;   // 탄퍼짐 정도
-
-    [Header("소음기")]
-    [SerializeField] private float noiseRadius = 10f;     // 기본 소음 범위
-    [SerializeField] private bool canUseSilencer = false; // 소음기 장착 가능 여부
-
-    [Header("전투 시스템")]
-    [SerializeField] private Battle battle; // 데미지 계산 전달
-
-    private float nextFireTime;         // 다음 발사 가능 시간
-    private bool isSilencer = false;    // 소음기 장착 여부
-
-    void Update()
-    {
-        // 좌클릭 유지 시 연사
-        if (Input.GetMouseButton(0) && Time.time >= nextFireTime)
-        {
-            nextFireTime = Time.time + (1f / fireRate);
-            Fire();
-        }
+        currentAmmo = weaponData.maxAmmo;
     }
 
     // 발사 실행 함수
-    private void Fire()
+    public void Fire()
     {
+        if (currentAmmo <= 0) return;
+        if (Time.time < nextFireTime) return; // 연사 속도 제한
+
+        nextFireTime = Time.time + (1f / weaponData.fireRate); // 다음 발사 시간 갱신
+        animator.SetTrigger("Shot"); // 애니메이션 실행
+        animator.SetInteger("WeaponType", (int)weaponData.weaponType); // 무기타입 애니메이터 전달
+
+        currentAmmo--; // 탄약 감소
+
         // 무기 타입에 따른 발사 방식
-        switch (weaponType)
+        switch (weaponData.weaponType)
         {
             case WeaponType.Pistol:
                 FireSingle();
@@ -66,7 +53,7 @@ public class WeaponController : MonoBehaviour
                 FireShotgun();
                 break;
         }
-        // 발사 후 소음 발생
+        // 소음 처리
         MakeNoise();
     }
 
@@ -80,12 +67,12 @@ public class WeaponController : MonoBehaviour
     // 샷건
     private void FireShotgun()
     {
-        for (int i = 0; i < pelletCount; i++)
+        for (int i = 0; i < weaponData.pelletCount; i++)
         {
             // 기본 방향
             Vector3 direction = playerCamera.transform.forward;
             // 랜덤 탄 퍼짐 적용
-            direction += Random.insideUnitSphere * spread;
+            direction += Random.insideUnitSphere * weaponData.spread;
 
             Shoot(direction);
         }
@@ -98,10 +85,12 @@ public class WeaponController : MonoBehaviour
         RaycastHit hit;
 
         // Raycast 충돌 검사
-        if (Physics.Raycast(ray, out hit, range))
+        if (Physics.Raycast(ray, out hit, weaponData.range))
         {
             // Battle로 충돌 정보 + 데미지 전달
-            battle.Hit(hit, damage);
+            battle.Hit(hit, weaponData.damage);
+            // 디버그 확인용
+            Debug.LogError(hit.collider.name);
         }
     }
 
@@ -109,7 +98,7 @@ public class WeaponController : MonoBehaviour
     private void MakeNoise()
     {
         // 소음기 장착 + 사용 가능 무기라면 AI 감지 차단
-        if (isSilencer && canUseSilencer) return;
+        if (isSilencer && weaponData.canUseSilencer) return;
 
         // AIManager에 소리 전달 로직 필요
     }
@@ -118,7 +107,7 @@ public class WeaponController : MonoBehaviour
     private void SetSilencer(bool value)
     {
         // 해당 무기가 소음기 사용 가능할 때만 적용
-        if (canUseSilencer)
+        if (weaponData.canUseSilencer)
         {
             isSilencer = value;
         }

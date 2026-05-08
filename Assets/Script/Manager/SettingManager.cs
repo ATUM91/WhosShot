@@ -16,15 +16,25 @@ public class SettingManager : MonoBehaviour
     [SerializeField] public float sfxVolume = 1f;      // 효과음
 
     [Header("마우스 감도")]
-    [SerializeField] public float mouseSensitivity = 200f; // 마우스 감도
+    [SerializeField] public float mouseSensitivity = 10f; // 마우스 감도
 
     [Header("화면 설정")]
     [SerializeField] public float brightness = 1f;      // 밝기 조절
-    [SerializeField] public int displayIndex = 0;       // 해상도 선택
+    [SerializeField] public int resolutionIndex = 0;    // 해상도 선택
     [SerializeField] public int screenModeIndex = 0;    // 화면 모드 0:전체, 1:전체창, 2:창
 
     [Header("크로스헤어")]
     [SerializeField] public int crosshairIndex = 0;    // 크로스헤어 종류
+
+    // 직접 사용할 해상도 목록
+    private readonly Vector2Int[] resolutions =
+    {
+        new Vector2Int(1280, 720),
+        new Vector2Int(1600, 900),
+        new Vector2Int(1920, 1080),
+        new Vector2Int(2560, 1440),
+        new Vector2Int(3840, 2160)
+    };
 
     private void Awake()
     {
@@ -44,8 +54,7 @@ public class SettingManager : MonoBehaviour
     public void ApplySetting()
     {
         ApplyBrightness();  // 밝기 적용
-        ApplyDisplay();     // 해상도 적용
-        ApplyScreenMode();  // 화면 모드 적용
+        ApplyResolutionAndScreenMode();     // 해상도 / 화면 모드 적용
     }
 
     // 밝기 조절
@@ -55,38 +64,37 @@ public class SettingManager : MonoBehaviour
         RenderSettings.ambientLight = Color.white * brightness;
     }
 
-    // 해상도 선택 / OS나 그래픽카드가 지원하는 해상도 목록을 가져옴 / 하드웨어 종속적인 동적 데이터라 배열 사용
-    public void ApplyDisplay()
+    // 1. 해상도 선택 / OS나 그래픽카드가 지원하는 해상도 목록을 가져옴 / 하드웨어 종속적인 동적 데이터라 배열 사용
+    // 2. 화면 모드 선택 / 엔진에서 정의된 고정 상태 값이라 switch문 사용
+    public void ApplyResolutionAndScreenMode()
     {
-        Resolution[] resolutions = Screen.resolutions;
-        if (displayIndex < 0 || displayIndex >= resolutions.Length)
-        { 
-            displayIndex = resolutions.Length - 1;
+        // 범위 체크
+        if (resolutionIndex < 0 || resolutionIndex >= resolutions.Length)
+        {
+            resolutionIndex = 2;
         }
-        Resolution resolution = resolutions[displayIndex];
-        // 현재 화면 모드 유지
-        Screen.SetResolution(resolution.width, resolution.height, Screen.fullScreenMode);
-    }
+        // 해상도 가져오기
+        Vector2Int resolution = resolutions[resolutionIndex];
 
-    // 화면 모드 선택 / 엔진에서 정의된 고정 상태 값이라 switch문 사용
-    public void ApplyScreenMode()
-    {
+        // 화면모드 설정
         FullScreenMode screenMode = FullScreenMode.ExclusiveFullScreen;
-
         switch (screenModeIndex)
         {
-            case 0: 
-                screenMode = FullScreenMode.ExclusiveFullScreen; // 전체 화면
+            case 0: screenMode = FullScreenMode.ExclusiveFullScreen; // 전체 화면
                 break;
-            case 1:
-                screenMode = FullScreenMode.FullScreenWindow; // 전체 창모드
+            case 1: screenMode = FullScreenMode.FullScreenWindow; // 전체 창모드
                 break;
-            case 2:
-                screenMode = FullScreenMode.Windowed; // 창모드
+            case 2: screenMode = FullScreenMode.Windowed; // 창모드
                 break;
         }
-        // 현재 해상도 유지
-        Screen.SetResolution(Screen.width, Screen.height, screenMode);
+        // 해상도 + 화면모드 적용
+        Screen.SetResolution(resolution.x, resolution.y, screenMode);
+    }
+
+    // 해상도 목록 반환
+    public Vector2Int[] GetResolutions()
+    {
+        return resolutions;
     }
 
     // BGM 볼륨 조절
@@ -118,7 +126,7 @@ public class SettingManager : MonoBehaviour
         PlayerPrefs.SetFloat("BGM", bgmVolume);             // BGM 볼륨
         PlayerPrefs.SetFloat("SFX", sfxVolume);             // SFX 볼륨
         PlayerPrefs.SetFloat("Brightness", brightness);     // 밝기
-        PlayerPrefs.SetInt("Display", displayIndex);        // 해상도
+        PlayerPrefs.SetInt("Resolution", resolutionIndex);  // 해상도
         PlayerPrefs.SetInt("ScreenMode", screenModeIndex);  // 화면 모드
         PlayerPrefs.SetInt("Crosshair", crosshairIndex);    // 크로스헤어
         PlayerPrefs.SetInt("BGM_Index", bgmIndex);          // 선택된 BGM
@@ -129,13 +137,29 @@ public class SettingManager : MonoBehaviour
     // 설정 불러오기
     public void SettingLoad()
     {
-        mouseSensitivity = PlayerPrefs.GetFloat("Mouse", 200f);
+        mouseSensitivity = PlayerPrefs.GetFloat("Mouse", 10f);
         bgmVolume = PlayerPrefs.GetFloat("BGM", 1f);
         sfxVolume = PlayerPrefs.GetFloat("SFX", 1f);
         brightness = PlayerPrefs.GetFloat("Brightness", 1f);
-        displayIndex = PlayerPrefs.GetInt("Display", 0);
+        resolutionIndex = PlayerPrefs.GetInt("Resolution", 2);
         screenModeIndex = PlayerPrefs.GetInt("ScreenMode", 0);
         crosshairIndex = PlayerPrefs.GetInt("Crosshair", 0);
         bgmIndex = PlayerPrefs.GetInt("BGM_Index", 0);
     }
+
+    #region SettingUI에서 호출해 갈 함수 (분리)
+    // 해상도
+    public void SetResolution(int index)
+    {
+        resolutionIndex = index;
+        ApplyResolutionAndScreenMode();
+    }
+    
+    // 화면모드
+    public void SetScreenMode(int index)
+    {
+        screenModeIndex = index;
+        ApplyResolutionAndScreenMode();
+    }
+    #endregion
 }

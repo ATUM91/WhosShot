@@ -9,6 +9,7 @@ TagManager:
   - BulletSpawn
   - LevelPart
   - Dummie
+  - DeadBody
   layers:
   - Default
   - TransparentFX
@@ -16,7 +17,7 @@ TagManager:
   - Player
   - Water
   - UI
-  - 
+  - PlayerView
   - 
   - 
   - 
