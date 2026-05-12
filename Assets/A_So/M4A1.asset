@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c67749c52e3b434d8860643c2e9d9eb, type: 3}
+  m_Name: M4A1
+  m_EditorClassIdentifier: 
+  weaponName: M4A1
+  weaponType: 1
+  weaponPrefab: {fileID: 8231352678144625343, guid: cd0b612594a45a34492dffc670308580, type: 3}
+  weaponIcon: {fileID: 21300000, guid: 7cccea92c415a3f4da988b75235c731c, type: 3}
+  damage: 35
+  fireRate: 0.2
+  range: 100
+  maxAmmo: 90
+  reloadTime: 2
+  pelletCount: 1
+  spread: 0.2
+  noiseRadius: 10
+  canUseSilencer: 0
+  recoilX: 0.2
+  recoilY: 0.2
+  runtimeAnimatorController: {fileID: 9100000, guid: 1f2dbcdae9eab6c4d8964f95faec99d6, type: 2}

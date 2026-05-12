@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c67749c52e3b434d8860643c2e9d9eb, type: 3}
+  m_Name: Beretta M9
+  m_EditorClassIdentifier: 
+  weaponName: Beretta M9
+  weaponType: 0
+  weaponPrefab: {fileID: 816222957822261777, guid: 19f5383c2b8476d468ceff5d19623c24, type: 3}
+  weaponIcon: {fileID: 21300000, guid: d536859f38516e641b300b4637defcbf, type: 3}
+  damage: 25
+  fireRate: 0.4
+  range: 50
+  maxAmmo: 45
+  reloadTime: 2
+  pelletCount: 1
+  spread: 0.2
+  noiseRadius: 10
+  canUseSilencer: 0
+  recoilX: 0.1
+  recoilY: 0.1
+  runtimeAnimatorController: {fileID: 22100000, guid: f931c6484b3319c4a9e1f8b12ee4bea2, type: 2}
