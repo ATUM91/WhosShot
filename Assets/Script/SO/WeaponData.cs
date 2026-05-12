@@ -1,12 +1,6 @@
 using UnityEngine;
 
 // 무기 종류 구분용
-
-public enum WeaponType
-{ 
-    Pistol, Rifle, Shotgun
-}
-
 // 무기 데이터 저장
 
 [CreateAssetMenu(fileName = "WeaponData", menuName = "FPS/Weapon Data")]
@@ -15,6 +9,12 @@ public class WeaponData : ScriptableObject
     [Header("기본 정보")]
     public string weaponName;       // 무기 이름
     public WeaponType weaponType;   // 무기 종류
+
+    [Header("프리팹")]
+    public GameObject weaponPrefab;
+
+    [Header("UI")]
+    public Sprite weaponIcon;
 
     [Header("전투")]
     public float damage = 10f;      // 데미지
@@ -37,5 +37,6 @@ public class WeaponData : ScriptableObject
     public float recoilX;
     public float recoilY;
 
-
+    [Header("애니메이션")]
+    public RuntimeAnimatorController runtimeAnimatorController; // 오버라이드 넣기
 }

@@ -10,76 +10,93 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("카메라")]
-    [SerializeField] public Transform cameraPivot;          // 카메라 상하 회전용 
-    [SerializeField] private float standCameraY = 1.6f;     // 서있을 때 카메라 높이
-    [SerializeField] private float crouchCameraY = 1.0f;    // 앉았을 때 카메라 높이
-    [SerializeField] private float cameraSmooth = 10f;      // 카메라 이동 속도
+    [SerializeField] private Transform cameraPivot;
+    [SerializeField] private float standCameraY = 1.6f;
+    [SerializeField] private float crouchCameraY = 1.0f;
+    [SerializeField] private float cameraSmooth = 10f;
 
     [Header("점프")]
-    [SerializeField] public float jumpForce = 1.5f;    // 점프 높이
-    [SerializeField] public float gravity = -9.8f;     // 중력 값
+    [SerializeField] private float jumpForce = 1.5f;
+    [SerializeField] private float gravity = -9.8f;
 
-    [Header("앉는 높이")]
-    [SerializeField] public float crouchHeight = 1f;    // 앉았을때 높이
-    [SerializeField] public float normalHeight = 2f;    // 서있을때 높이
+    [Header("앉기")]
+    [SerializeField] private float crouchHeight = 1f;
+    [SerializeField] private float normalHeight = 2f;
 
     [Header("시체")]
-    [SerializeField] private Transform carryPoint;          // 들고 있을 시체 위치
-    [SerializeField] private float interactDistance = 3f;   // 상호작용 거리
-    [SerializeField] private float throwDistance = 5f;      // 던지는 거리
+    [SerializeField] private Transform carryPoint;
+    [SerializeField] private float interactDistance = 3f;
+    [SerializeField] private float throwForce = 5f;
+
+    [Header("상호작용에 필요한 시간")]
+    [SerializeField] private float holdTime = 2f;
 
     [Header("애니메이터")]
-    [SerializeField] private Animator animator;
+    public Animator animator;
 
-    private CharacterController characterController; // 유니티 내장 컴포넌트 사용
+    [Header("무기 슬롯")]
+    public PlayerWeaponSlot playerWeaponSlot;
+
+    private CharacterController characterController;
+    private PlayerState state;
+
+    private GameObject carryObject;
     private DeadBodyHighlight currentHighlight;
-    private PlayerState playerState;
-    private GameObject carryObject;  // 들고 있는 오브젝트
+    private StealthUIManager stealthUIManager;
 
-    private float currentCameraY;
+    private RaycastHit hit;
+    private Ray ray;
+
     private float yVelocity;
     private float xRotation;
+    private float cameraY;
 
     // 입력 캐싱
     private float x;
     private float z;
 
-    // 자기 자신 컴포넌트 캐싱
+    private float holdTimer; // 상호작용 누적 시간 / 시체
+
+    private bool canInteract;
+    private bool tryCrouch;
+
     void Awake()
     {
-        // 같은 오브젝트에서 사용하기위해 Awake에서 캐싱
         characterController = GetComponent<CharacterController>();
-        playerState = GetComponent<PlayerState>();
+        state = GetComponent<PlayerState>();
     }
 
-    // 초기 설정
     void Start()
     {
-        // 마우스를 화면 중앙에 고정
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        // 초기 카메라 높이 저장
-        currentCameraY = standCameraY;
+        characterController.height = normalHeight;
+        characterController.center = new Vector3(0, normalHeight / 2f, 0);
+
+        cameraY = standCameraY;
+        stealthUIManager = StealthUIManager.Instance;
     }
 
     // 매프레임 실행
     void Update()
     {
         InputCache();   // 입력 캐싱
-        MouseLook();    // 시점
-        Gravity();      // 중력 계산
-        Jump();         // 점프
-        State();        // 상태 결정
-        Move();         // 이동
-        Crouch();       // 앉기
 
-        HighlightBody();// 시체 하이라이트
-        Interact();     // 시체 들기
-        Throw();        // 던지기
+        StateInput();
+        MouseLook();
+        Move();
+        Gravity();
+        Jump();
+        Crouch();
 
-        animator.SetFloat("Speed", characterController.velocity.magnitude);
-        animator.SetBool("IsGrounded", characterController.isGrounded);
+        WeaponInput();      // 발사 처리
+        WeaponSwapInput();  // 무기 교체
+
+        HighlightBody();
+
+        HoldInteract();
+        ThrowBody();
     }
 
     #region 플레이어 기본 입력 및 상태 처리
@@ -89,55 +106,32 @@ public class PlayerController : MonoBehaviour
         x = Input.GetAxisRaw("Horizontal");
         z = Input.GetAxisRaw("Vertical");
     }
-
-    // 마우스 시점 처리 / 좌우 - 플레이어 회전 / 상하 - 카메라 회전
-    private void MouseLook()
+    private void StateInput()
     {
-        if (SettingManager.Instance == null) return;
-
-        // 설정 값에서 마우스 감도 가져오기
-        float sensitivity = SettingManager.Instance.mouseSensitivity;
-
-        // 마우스 입력
-        float mouseX = Input.GetAxis("Mouse X") * sensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * sensitivity;
-
-        // (임시) 상하 회전 제한 (심한 회전을 막기 위함)
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -80f, 80f);
-
-        // 카메라 상하 회전 적용
-        cameraPivot.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-        // 플레이어 좌우 회전 적용
-        transform.Rotate(Vector3.up * mouseX);
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+            // 달리기
+            state.SetMoveState(PlayerMoveState.Run);
+        }
+        else
+        {
+            // 걷기
+            state.SetMoveState(PlayerMoveState.Walk);
+        }
     }
 
-    // 이동 + 점프 + 상태 결정
-    private void State()
+    private void MouseLook()
     {
-        // 공중이면 점프 상태 유지
-        if (!characterController.isGrounded)
-        {
-            playerState.currentState = PlayerMoveState.Jump;
-            return;
-        }
+        float sensitivity = 2f;
 
-        if (Input.GetKey(KeyCode.LeftControl)) // L.Ctrl키 - 앉기
-        {
-            playerState.currentState = PlayerMoveState.Crouch;
-        }
-        else if (Input.GetKey(KeyCode.LeftShift) && z > 0) // L.Shift - 달리기
-        {
-            playerState.currentState = PlayerMoveState.Run;
-        }
-        else if (x != 0 || z != 0) // x 또는 z 의 입력이 없지 않다면, 걷기
-        {
-            playerState.currentState = PlayerMoveState.Walk;
-        }
-        else // 대기
-        {
-            playerState.currentState = PlayerMoveState.Idle;
-        }
+        float moveX = Input.GetAxis("Mouse X") * sensitivity;
+        float moveY = Input.GetAxis("Mouse Y") * sensitivity;
+
+        xRotation -= moveY;
+        xRotation = Mathf.Clamp(xRotation, -80f, 80f);
+
+        cameraPivot.localRotation = Quaternion.Euler(xRotation, 0, 0);
+        transform.Rotate(Vector3.up * moveX);
     }
 
     // 이동 처리
@@ -145,7 +139,7 @@ public class PlayerController : MonoBehaviour
     {
         Vector3 move = transform.right * x + transform.forward * z;
         move = Vector3.ClampMagnitude(move, 1f); // 대각선 이동 속도 고정
-        float speed = playerState.GetSpeed();
+        float speed = state.GetSpeed();
 
         // 중력 포함 이동
         Vector3 velocity = move * speed;
@@ -178,29 +172,80 @@ public class PlayerController : MonoBehaviour
     // 앉기 처리 (높이 변경)
     private void Crouch()
     {
+        // 1. 언제든 입력 받기
+        tryCrouch = Input.GetKey(KeyCode.LeftControl);
+
         float targetCameraY = standCameraY;
 
-        // 앉기 상태
-        if (playerState.currentState == PlayerMoveState.Crouch)
+        // 2. 실제 속도 적용은 지상일 때
+        if (characterController.isGrounded)
         {
-            characterController.height = crouchHeight;
-            // 캐릭터 센터 이동 / 땅에 박힘 금지
-            characterController.center = new Vector3(0, crouchHeight / 2f, 0);
-            targetCameraY = crouchCameraY;
+            if (tryCrouch)
+            {
+                characterController.height = crouchHeight;
+                // 캐릭터 센터 이동 / 땅에 박힘 금지
+                characterController.center = new Vector3(0, crouchHeight / 2f, 0);
+                state.SetMoveState(PlayerMoveState.Crouch);
+                targetCameraY = crouchCameraY;
+            }
+            else
+            {
+                characterController.height = normalHeight;
+                // 캐릭터 센터 이동 / 땅에 박힘 금지
+                characterController.center = new Vector3(0, normalHeight / 2f, 0);
+            }
         }
         else
         {
-            characterController.height = normalHeight;
-            // 캐릭터 센터 이동 / 땅에 박힘 금지
-            characterController.center = new Vector3(0, normalHeight / 2f, 0);
+            // 3. 공중에서는 속도 안 바뀌도록 상태 유지
+            if (tryCrouch)
+            {
+                targetCameraY = crouchCameraY;
+            }
+            else
+            {
+                targetCameraY = standCameraY;
+            }
         }
-
         // 카메라 부드럽게 이동
-        currentCameraY = Mathf.Lerp(currentCameraY, targetCameraY, cameraSmooth * Time.deltaTime);
+        cameraY = Mathf.Lerp(cameraY, targetCameraY, cameraSmooth * Time.deltaTime);
 
         Vector3 cameraPos = cameraPivot.localPosition;
-        cameraPos.y = currentCameraY;
+        cameraPos.y = cameraY;
         cameraPivot.localPosition = cameraPos;
+    }
+    #endregion
+
+    #region 무기 입력
+    // 발사 입력
+    private void WeaponInput()
+    {
+        if (Input.GetMouseButton(0))
+        {
+            WeaponController currentWeapon = playerWeaponSlot.GetCurrentWeapon();
+
+            if (currentWeapon != null)
+            {
+                animator.SetTrigger("Shot");
+                currentWeapon.Fire();
+
+                state.SetShot();
+            }
+        }
+    }
+
+    // 무기 교체 입력
+    private void WeaponSwapInput()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        { 
+            playerWeaponSlot.EquipSlot1();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            playerWeaponSlot.EquipSlot2();
+        }
     }
     #endregion
 
@@ -213,11 +258,12 @@ public class PlayerController : MonoBehaviour
         {
             currentHighlight.SetHighlight(false);
             currentHighlight = null;
+
+            StealthUIManager.Instance.BlindInteraction();
         }
 
-        // 화면 중앙에서 레이 발사
-        Ray ray = new Ray(cameraPivot.position, cameraPivot.forward);
-        RaycastHit hit;
+        ray.origin = cameraPivot.position;
+        ray.direction = cameraPivot.forward;
 
         if (Physics.Raycast(ray, out hit, interactDistance))
         {
@@ -225,70 +271,98 @@ public class PlayerController : MonoBehaviour
             if (hit.collider.transform.root.CompareTag("DeadBody"))
             { 
                 DeadBodyHighlight deadBodyHighlight = hit.collider.GetComponentInParent<DeadBodyHighlight>();
+
                 if (deadBodyHighlight != null)
-                { 
+                {
+                    // 하이라이트 ON
                     deadBodyHighlight.SetHighlight(true);
                     currentHighlight = deadBodyHighlight;
+                    // 인터렉션 ON
+                    stealthUIManager.ShowInteraction("[E] 시체 들기");
                 }
             }
         }
     }
 
-    // 시체 들기 처리
-    private void Interact()
+    // 상호작용 처리 / 상호작용에 걸리는 시간 존재
+    private void HoldInteract()
     {
-        if (Input.GetKeyDown(KeyCode.E))
-        { 
-            // 시선 방향 레이
-            Ray ray = new Ray(cameraPivot.position, cameraPivot.forward);
-            RaycastHit hit;
+        canInteract = false;
 
-            if (Physics.Raycast(ray, out hit, interactDistance))
+        ray.origin = cameraPivot.position;
+        ray.direction = cameraPivot.forward;
+
+        if (Physics.Raycast(ray, out hit, interactDistance))
+        {
+            if (hit.collider.transform.root.CompareTag("DeadBody"))
+                canInteract = true;
+        }
+
+        if (!canInteract)
+        {
+            holdTimer = 0f;
+            return;
+        }
+
+        if (Input.GetKey(KeyCode.E))
+        {
+            holdTimer += Time.deltaTime;
+            stealthUIManager.ShowInteraction($"들기 진행중... {(holdTimer / holdTime) * 100f:0}%");
+
+            if (holdTimer >= holdTime)
             {
-                if (hit.collider.transform.root.CompareTag("DeadBody"))
-                {
-                    PickupBody(hit.collider.transform.root.gameObject);
-                }
+                Interact(hit);
+                holdTimer = 0; // 타이머 초기화
             }
+        }
+        else
+        { 
+            holdTimer = 0; // 상호작용 실패 및 타이머 초기화
         }
     }
 
-    // 시체 들기
-    private void PickupBody(GameObject gameObject)
+    private void Interact(RaycastHit hit)
     {
-        if (carryObject != null) return;
-        carryObject = gameObject;
+        carryObject = hit.collider.transform.root.gameObject;
 
-        Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+        Rigidbody rb = carryObject.GetComponent<Rigidbody>();
+
         if (rb != null)
         {
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
             rb.isKinematic = true;
             rb.useGravity = false;
         }
-        gameObject.transform.SetParent(carryPoint, false);
-        gameObject.transform.localPosition = Vector3.zero;
-        gameObject.transform.localRotation = Quaternion.identity;
-        gameObject.transform.localScale = Vector3.one;
 
-        animator.SetTrigger("Take");
+        carryObject.transform.SetParent(carryPoint);
+        carryObject.transform.localPosition = Vector3.zero;
+        carryObject.transform.localRotation = Quaternion.identity;
+
+        state.SetActionState(PlayerActionState.Carry);
     }
 
-    // 시체 던지기
-    private void Throw()
+    // 시체 던지기 처리
+    private void ThrowBody()
     {
         if (Input.GetKeyDown(KeyCode.F) && carryObject != null)
         {
-            GameObject gameObject = carryObject;
+            GameObject deadBody = carryObject;
             carryObject = null;
-            gameObject.transform.SetParent(null);
 
-            Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+            deadBody.transform.SetParent(null);
+
+            Rigidbody rb = deadBody.GetComponent<Rigidbody>();
             if (rb != null)
             { 
                 rb.isKinematic = false;
                 rb.useGravity = true;
-                rb.AddForce(cameraPivot.forward * throwDistance, ForceMode.Impulse);
+                rb.velocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+
+                rb.AddForce(cameraPivot.forward * throwForce, ForceMode.Impulse);
             }
+            state.SetActionState(PlayerActionState.None);
         }
     }
     #endregion

@@ -5,12 +5,14 @@ using UnityEngine.UI;
 
 public class DeadBodyHighlight : MonoBehaviour
 {
+    [Header("아웃 라인")]
     private Outline outline;
+
     private bool onDeadBody;
 
     void Awake()
     {
-        outline = GetComponent<Outline>();
+        outline = GetComponentInChildren<Outline>();
         if (outline != null)
         { 
             outline.enabled = false;
@@ -21,6 +23,11 @@ public class DeadBodyHighlight : MonoBehaviour
     public void OnDeadBody()
     { 
         onDeadBody = true;
+        // 죽기전에 아웃라인 안보이도록
+        if (outline != null)
+        { 
+            outline.enabled = false;
+        }
     }
 
     // 하이라이트 On / Off

@@ -17,10 +17,17 @@ public class SettingUI : MonoBehaviour
     [Header("화면 모드 UI")]
     [SerializeField] private TMP_Dropdown screenModeDropdown;
 
+    [Header("크로스 헤어")]
+    [SerializeField] private Image crosshairPreviewImage;
+    [SerializeField] private Sprite[] crosshairSprite;
+
     void Start()
     {
         InitResolutionDropdown();
         InitScreenModeDropdown();
+
+        // 저장된 번호의 크로스헤어 프리뷰 적용
+        crosshairPreviewImage.sprite = crosshairSprite[SettingManager.Instance.crosshairIndex];
     }
 
     // 해상도 초기화
@@ -90,12 +97,9 @@ public class SettingUI : MonoBehaviour
 
     // 크로스헤어 변경
     public void SetCrosshair(int index)
-    { 
-        SettingManager.Instance.crosshairIndex = index;
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.ApplyCrosshair();
-        }
+    {
+        SettingManager.Instance.SetCrosshair(index); // 현재 번호 저장
+        crosshairPreviewImage.sprite = crosshairSprite[index]; // 프리뷰 이미지 변경
     }
 
     // 저장 버튼

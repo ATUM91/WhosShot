@@ -97,6 +97,17 @@ public class SettingManager : MonoBehaviour
         return resolutions;
     }
 
+    // 크로스헤어 변경
+    public void SetCrosshair(int index)
+    { 
+        // 현재 크로스헤어 인덱스 번호 저장
+        crosshairIndex = index;
+
+        // PlayerPrefs 저장
+        PlayerPrefs.SetInt("Crosshair", index);
+        PlayerPrefs.Save();
+    }
+
     // BGM 볼륨 조절
     public void SetBGMVolume(float value)
     {
@@ -126,6 +137,7 @@ public class SettingManager : MonoBehaviour
         PlayerPrefs.SetFloat("BGM", bgmVolume);             // BGM 볼륨
         PlayerPrefs.SetFloat("SFX", sfxVolume);             // SFX 볼륨
         PlayerPrefs.SetFloat("Brightness", brightness);     // 밝기
+
         PlayerPrefs.SetInt("Resolution", resolutionIndex);  // 해상도
         PlayerPrefs.SetInt("ScreenMode", screenModeIndex);  // 화면 모드
         PlayerPrefs.SetInt("Crosshair", crosshairIndex);    // 크로스헤어
@@ -141,6 +153,7 @@ public class SettingManager : MonoBehaviour
         bgmVolume = PlayerPrefs.GetFloat("BGM", 1f);
         sfxVolume = PlayerPrefs.GetFloat("SFX", 1f);
         brightness = PlayerPrefs.GetFloat("Brightness", 1f);
+
         resolutionIndex = PlayerPrefs.GetInt("Resolution", 2);
         screenModeIndex = PlayerPrefs.GetInt("ScreenMode", 0);
         crosshairIndex = PlayerPrefs.GetInt("Crosshair", 0);

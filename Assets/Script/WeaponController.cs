@@ -12,85 +12,73 @@ public class WeaponController : MonoBehaviour
     [Header("현재 무기 SO 데이터")]
     [SerializeField] private WeaponData weaponData; // 현재 무기 타입
 
-    [Header("참조")]
+    [Header("카메라")]
     [SerializeField] private Camera playerCamera;   // 발사 기준 카메라
-    [SerializeField] private Animator animator;        // 플레이어 애니메이션
-    [SerializeField] private Battle battle;         // 데미지 계산 전달용
+
+    private Battle battle;         // 데미지 계산 전달용
 
     private int currentAmmo;
     private float nextFireTime;         // 다음 발사 가능 시간 / 연사 제한
     private bool isSilencer;
 
-    void Start()
+    void Awake()
     {
-        currentAmmo = weaponData.maxAmmo;
+        // 캐싱
+        battle = GetComponent<Battle>();
+    }
+
+    // 카메라 설정 (발사 기준)
+    public void SetCamera(Camera cam)
+    {
+        playerCamera = cam;
+    }
+
+    // 현재 무기 데이터 반환
+    public WeaponData GetWeaponData()
+    {
+        return weaponData;
+    }
+
+    // 무기 데이터 설정
+    public void SetWeaponData(WeaponData data)
+    {
+        weaponData = data;
+    }
+
+    // 탄약 설정 (스왑 복구용)
+    public void SetAmmo(int ammo)
+    {
+        currentAmmo = ammo;
+    }
+
+    // 탄약 설정 (스왑 저장용)
+    public int GetAmmo()
+    {
+        return currentAmmo;
     }
 
     // 발사 실행 함수
     public void Fire()
     {
+        if (weaponData == null) return;
         if (currentAmmo <= 0) return;
         if (Time.time < nextFireTime) return; // 연사 속도 제한
 
         nextFireTime = Time.time + (1f / weaponData.fireRate); // 다음 발사 시간 갱신
-        animator.SetTrigger("Shot"); // 애니메이션 실행
-        animator.SetInteger("WeaponType", (int)weaponData.weaponType); // 무기타입 애니메이터 전달
-
         currentAmmo--; // 탄약 감소
 
-        // 무기 타입에 따른 발사 방식
-        switch (weaponData.weaponType)
-        {
-            case WeaponType.Pistol:
-                FireSingle();
-                break;
-
-            case WeaponType.Rifle:
-                FireSingle();
-                break;
-
-            case WeaponType.Shotgun:
-                FireShotgun();
-                break;
-        }
+        Shoot(playerCamera.transform.forward);
+        
         // 소음 처리
         MakeNoise();
     }
 
-    // 단발
-    private void FireSingle()
+    private void Shoot(Vector3 dir)
     {
-        // 카메라 정면 방향
-        Shoot(playerCamera.transform.forward);
-    }
-
-    // 샷건
-    private void FireShotgun()
-    {
-        for (int i = 0; i < weaponData.pelletCount; i++)
-        {
-            // 기본 방향
-            Vector3 direction = playerCamera.transform.forward;
-            // 랜덤 탄 퍼짐 적용
-            direction += Random.insideUnitSphere * weaponData.spread;
-
-            Shoot(direction);
-        }
-    }
-
-    // Raycast + Battle로 전달
-    private void Shoot(Vector3 direction)
-    {
-        Ray ray = new Ray(playerCamera.transform.position, direction);
         RaycastHit hit;
-
-        // Raycast 충돌 검사
-        if (Physics.Raycast(ray, out hit, weaponData.range))
+        if (Physics.Raycast(playerCamera.transform.position, dir, out hit, weaponData.range))
         {
-            // Battle로 충돌 정보 + 데미지 전달
             battle.Hit(hit, weaponData.damage);
-            // 디버그 확인용
-            Debug.LogError(hit.collider.name);
         }
     }
 
@@ -102,17 +90,4 @@ public class WeaponController : MonoBehaviour
 
         // AIManager에 소리 전달 로직 필요
     }
-
-    // 소음기 장착 / 해제
-    private void SetSilencer(bool value)
-    {
-        // 해당 무기가 소음기 사용 가능할 때만 적용
-        if (weaponData.canUseSilencer)
-        {
-            isSilencer = value;
-        }
-    }
-
-
-
 }

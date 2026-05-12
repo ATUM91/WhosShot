@@ -1,18 +1,19 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class DifficultyData : MonoBehaviour
-{
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+// 난이도 SO
+// 스텔스모드 - 적 AI 개체 수 증가
+// 팀 데스매치 모드 - 적 AI 사격 반응속도 / 정확도 증가
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+[CreateAssetMenu(menuName = "Game/Difficulty")]
+public class DifficultyData : ScriptableObject
+{
+    [Header("스텔스 AI")]
+    public int addStealthEnemyCount;
+    public int addStealthMaxkillCount;
+
+    [Header("팀 데스매치 AI")]
+    public float tdmAiReactionTime;
+    public float tdmAiHitRate;
+
+    public string difficultyName;
 }

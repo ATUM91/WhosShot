@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,24 +7,52 @@ using UnityEngine.UI;
 
 public class LobbyUI : MonoBehaviour
 {
+    [Header("맵 선택")]
     [SerializeField] private Toggle oilStorageToggle;
     [SerializeField] private Toggle supplyCenterToggle;
 
     [SerializeField] private string oilStorageSceneName;
     [SerializeField] private string supplyCenterSceneName;
 
+    [Header("메인 패널")]
     public GameObject mainPanel;                // 로비(메인)
     public GameObject stealthMapSelectPanel;    // 스텔스 맵 선택 패널
     public GameObject tdmMapSelectPanel;        // 팀데스매치 맵 선택 패널
     public GameObject weaponSelectPanel;        // 무기고 선택 패널
 
+    [Header("무기 카테고리")]
     public GameObject pistolPanel;  // 권총 패널
     public GameObject riflePanel;   // 소총 패널
     public GameObject shotgunPanel; // 샷건 패널
 
+    [Header("팝업")]
     public GameObject helpPanel;    // 도움말 패널
     public GameObject settingPanel; // 설정 패널
     public GameObject quitPanel;    // 종료 확인 패널
+
+    [Header("무기 장착 패널")]
+    [SerializeField] private GameObject equipPanel;
+
+    [Header("무기 슬롯1 UI")]
+    [SerializeField] private Image slot1Image;
+    [SerializeField] private TMP_Text slot1Text;
+
+    [Header("무기 슬롯2 UI")]
+    [SerializeField] private Image slot2Image;
+    [SerializeField] private TMP_Text slot2Text;
+
+    // 현재 선택한 무기
+    private WeaponData currentWeaponData;
+
+    void Start()
+    {
+        equipPanel.SetActive(false);
+        if (PlayerLoadout.Instance != null)
+        {
+            PlayerLoadout.Instance.Init();
+        }
+        RefreshSlotUI();
+    }
 
     // 모든 패널 비활성화
     private void CloseAllPanel()
@@ -34,6 +63,7 @@ public class LobbyUI : MonoBehaviour
         settingPanel.SetActive(false);
         helpPanel.SetActive(false);
         quitPanel.SetActive(false);
+
     }
 
     #region 메인 버튼
@@ -90,6 +120,76 @@ public class LobbyUI : MonoBehaviour
         pistolPanel.SetActive(false);
         riflePanel.SetActive(false);
         shotgunPanel.SetActive(true);
+    }
+    #endregion
+
+    #region 무기 장착
+    // 무기 버튼 클릭
+    public void SelectWeapon(WeaponData weaponData)
+    {
+        currentWeaponData = weaponData;
+        equipPanel.SetActive(true);
+    }
+
+    // 슬롯1 장착
+    public void EquipFirstSlot()
+    {
+        if (currentWeaponData == null)
+        {
+            Debug.Log("currentWeaponData NULL");
+            return;
+        }
+        PlayerLoadout.Instance.weaponSlot1 = currentWeaponData;
+
+        RefreshSlotUI();
+        equipPanel.SetActive(false);
+    }
+
+    // 슬롯2 장착
+    public void EquipSecondSlot()
+    {
+        if (PlayerLoadout.Instance == null) return;
+        PlayerLoadout.Instance.weaponSlot2 = currentWeaponData;
+
+        RefreshSlotUI();
+        equipPanel.SetActive(false);
+    }
+
+    // 장착 패널 취소 버튼
+    public void CancleSlotPanel()
+    {
+        equipPanel.SetActive(false);
+    }
+
+    // 슬롯 UI 갱신
+    private void RefreshSlotUI()
+    {
+        if (PlayerLoadout.Instance == null) return;
+
+        // 슬롯1
+        if (PlayerLoadout.Instance.weaponSlot1 != null)
+        {
+            slot1Text.text = PlayerLoadout.Instance.weaponSlot1.weaponName;
+            slot1Image.sprite = PlayerLoadout.Instance.weaponSlot1.weaponIcon;
+        }
+        else
+        {
+            slot1Text.text = "EMPTY";
+            slot1Image.sprite = null;
+        }
+
+
+        // 슬롯2
+        if (PlayerLoadout.Instance.weaponSlot2 != null)
+        {
+            slot2Text.text = PlayerLoadout.Instance.weaponSlot2.weaponName;
+            slot2Image.sprite = PlayerLoadout.Instance.weaponSlot2.weaponIcon;
+        }
+        else
+        {
+            slot2Text.text = "EMPTY";
+            slot2Image.sprite = null;
+        }
     }
     #endregion
 
