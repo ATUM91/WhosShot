@@ -3,6 +3,12 @@ using UnityEngine;
 // 무기 종류 구분용
 // 무기 데이터 저장
 
+public enum WeaponType
+{ 
+    Pistol, Rifle
+}
+
+[System.Serializable]
 [CreateAssetMenu(fileName = "WeaponData", menuName = "FPS/Weapon Data")]
 public class WeaponData : ScriptableObject
 {
@@ -22,12 +28,14 @@ public class WeaponData : ScriptableObject
     public float range = 100f;      // 사거리
 
     [Header("탄약")]
-    public int maxAmmo = 30;
-    public float reloadTime = 2f;
+    public int magazineAmmo = 30;   // 탄창 크기
+    public int maxReserveAmmo = 90; // 최대 예비탄
+    public float reloadTime = 2f;   // 장전 시간
 
-    [Header("특수 무기")]
-    public int pelletCount = 8;     // 샷건 탄 수
-    public float spread = 0.2f;     // 탄 퍼짐
+    [Header("탄퍼짐")]
+    public float spreaBurst = 0.005f;       // 연사 시 증가량
+    public float spreadRecoverSpeed = 4f;   // 탄퍼짐 복구 속도
+    public float maxSpread = 0.05f;         // 최대 탄퍼짐
 
     [Header("소음")]
     public float noiseRadius = 10f;     // AI 감지 범위
@@ -37,6 +45,15 @@ public class WeaponData : ScriptableObject
     public float recoilX;
     public float recoilY;
 
-    [Header("애니메이션")]
-    public RuntimeAnimatorController runtimeAnimatorController; // 오버라이드 넣기
+    [Header("애니메이터")]   // 총기 종류별로 알맞는 컨트롤러 넣기
+    public RuntimeAnimatorController baseController;        // 라이플
+    public AnimatorOverrideController overrideController;   // 피스톨
+
+    [Header("사운드")]
+    public AudioClip fireSound;     // 발사 사운드
+    public AudioClip reloadSound;   // 장전 사운드
+    public AudioClip equipSound;    // 무기 교체 사운드
+    public float fireVolume = 1f;   // 발사 볼륨 (SO에서 개별 조절)
+    public float reloadVolume = 1f; // 장전 볼륨 (SO에서 개별 조절)
+    public float equipVolume = 1f;  // 무기 교체 볼륨 (SO에서 개별 조절)
 }

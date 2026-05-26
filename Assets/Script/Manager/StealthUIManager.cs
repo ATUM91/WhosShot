@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 // 스텔스모드 HUD 관리
 // 크로스헤어 / 상호작용 UI 관리
@@ -8,6 +9,7 @@ using TMPro;
 public class StealthUIManager : MonoBehaviour
 {
     public static StealthUIManager Instance;
+
     [Header("크로스헤어")]
     [SerializeField] private Image crosshairImage;
     [SerializeField] private Sprite[] crosshairSprite;
@@ -15,11 +17,54 @@ public class StealthUIManager : MonoBehaviour
     [Header("상호작용 UI")]
     [SerializeField] private TMP_Text interactionText;
 
+    [Header("HP UI")]
+    [SerializeField] private Slider hpSlider;
+    [SerializeField] private TMP_Text hpText;
+
+    [Header("탄약 UI")]
+    [SerializeField] private TMP_Text ammoText;
+
+    [Header("발각 게이지")]
+    [SerializeField] private GameObject detectGauge;
+    [SerializeField] private Image detectFill;
+    [SerializeField] private Image screenSuspectIcon;
+    [SerializeField] private Image screenAlertIcon;
+
+    [Header("시체 UI")]
+    [SerializeField] private GameObject deadBodyHoldUI;
+    [SerializeField] private Image deadBodyHoldFill;
+
+    [Header("미션 UI")]
+    [SerializeField] private GameObject missionHoldUI;
+    [SerializeField] private Image missionHoldFill;
+
+    [Header("결과 UI")]
+    [SerializeField] private GameObject successPanel;
+    [SerializeField] private GameObject failPanel;
+
+    void Awake()
+    {
+        if (Instance == null) Instance = this;
+    }
+
     void Start()
     {
         ApplyCrosshair();
         // 시작 시 숨김 처리
         interactionText.gameObject.SetActive(false);
+
+        detectGauge.SetActive(false);
+
+        screenSuspectIcon.gameObject.SetActive(false);
+        screenAlertIcon.gameObject.SetActive(false);
+
+        successPanel.SetActive(false);
+        failPanel.SetActive(false);
+    }
+
+    void Update()
+    {
+        UpdateDetectGauge();
     }
 
     // 저장된 크로스헤어 적용
@@ -47,5 +92,123 @@ public class StealthUIManager : MonoBehaviour
     public void BlindInteraction()
     {
         interactionText.gameObject.SetActive(false);
+    }
+
+    // HP UI 표시
+    public void UpdateHP(float currentHP, float maxHP)
+    {
+        if (hpSlider != null)
+        {
+            hpSlider.maxValue = maxHP;
+            hpSlider.value = currentHP;
+        }
+
+        if (hpText != null)
+        {
+            hpText.text = $"{currentHP:0}/{maxHP:0}";
+        }
+    }
+
+    // 시체 진행률 업데이트 (0~1)
+    public void UpdateDeadBodyHold(float ratio)
+    {
+        if (deadBodyHoldFill == null) return;
+        deadBodyHoldFill.fillAmount = Mathf.Clamp01(ratio);
+    }
+
+    // C4 진행률 업데이트 (0~1)
+    public void UpdateMissionHold(float ratio)
+    {
+        if (missionHoldFill == null) return;
+
+        missionHoldFill.fillAmount = ratio;
+    }
+
+    // 탄약 UI 표시
+    public void UpdateAmmo(int currentAmmo, float reserveAmmo)
+    {
+        if (ammoText != null)
+        {
+            ammoText.text = $"{currentAmmo}/{reserveAmmo}";
+        }
+    }
+
+    // 발각 게이지 표시
+    public void UpdateDetectGauge()
+    {
+        if (DetectManager.Instance == null) return;
+
+        float currentGauge = DetectManager.Instance.GetDetect();
+        float maxGauge = DetectManager.Instance.GetMaxDetect();
+
+        float ratio = currentGauge / maxGauge;
+        bool isDetecting = currentGauge > 0f;
+
+        detectGauge.SetActive(isDetecting);
+        if (!isDetecting) return;
+
+        detectFill.fillAmount = ratio;
+
+        // 게이지가 꽉 차면 느낌표로 전환
+        if (ratio >= 1f)
+        {
+            screenSuspectIcon.gameObject.SetActive(false);
+            screenAlertIcon.gameObject.SetActive(true);
+        }
+        else
+        {
+            screenSuspectIcon.gameObject.SetActive(true);
+            screenAlertIcon.gameObject.SetActive(false);
+        }
+    }
+
+    // 시체 UI ON
+    public void ShowDeadBodyHold()
+    {
+        if (deadBodyHoldUI == null) return;
+        deadBodyHoldUI.SetActive(true);
+    }
+
+    // 시체 UI OFF
+    public void HideDeadBodyHold()
+    {
+        if (deadBodyHoldUI == null) return;
+        deadBodyHoldUI.SetActive(false);
+    }
+
+    // 미션 UI ON
+    public void ShowMissionHold()
+    {
+        if (missionHoldUI == null) return;
+        missionHoldUI.SetActive(true);
+    }
+
+    // 미션 UI OFF
+    public void HideMissionHold()
+    {
+        if (missionHoldUI == null) return;
+        missionHoldUI.SetActive(false);
+    }
+
+    // 결과 UI
+    public void ShowSuccess()
+    { 
+        successPanel.SetActive(true);
+        failPanel.SetActive(false);
+        Time.timeScale = 0f;
+    }
+
+    public void ShowFail()
+    { 
+        failPanel.SetActive(true);
+        successPanel.SetActive(false);
+        Time.timeScale = 0f;
+    }
+
+    // 로비 이동
+    public void GoLobby()
+    {
+        Time.timeScale = 1f;
+        SceneLoading.LoadTo("Scene Lobby");
     }
 }

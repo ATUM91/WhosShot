@@ -19,6 +19,14 @@ public class DeadBodyHighlight : MonoBehaviour
         }
     }
 
+    public bool IsDeadBody() => onDeadBody;
+    /*
+    public bool IsDeadBody()
+    {
+        return onDeadBody;
+    }
+    */
+
     // 시체 상태 활성화
     public void OnDeadBody()
     { 

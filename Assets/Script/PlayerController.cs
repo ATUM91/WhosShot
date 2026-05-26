@@ -1,4 +1,6 @@
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 // 플레이어 입력 처리
 // 이동 / 점프 / 앉기
@@ -28,7 +30,10 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float interactDistance = 3f;
     [SerializeField] private float throwForce = 5f;
 
-    [Header("상호작용에 필요한 시간")]
+    [Header("미션 목표 상호 작용")]
+    [SerializeField] private float missionTargetHoldTime = 3f;
+
+    [Header("시체 상호작용에 필요한 시간")]
     [SerializeField] private float holdTime = 2f;
 
     [Header("애니메이터")]
@@ -41,6 +46,7 @@ public class PlayerController : MonoBehaviour
     private PlayerState state;
 
     private GameObject carryObject;
+    private MissionTarget currentMissionTarget;
     private DeadBodyHighlight currentHighlight;
     private StealthUIManager stealthUIManager;
 
@@ -55,7 +61,8 @@ public class PlayerController : MonoBehaviour
     private float x;
     private float z;
 
-    private float holdTimer; // 상호작용 누적 시간 / 시체
+    private float missionTargetHoldTimer;  // 목표물 상호작용 누적 시간 
+    private float holdTimer;        // 시체 상호작용 누적 시간
 
     private bool canInteract;
     private bool tryCrouch;
@@ -68,6 +75,9 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
+        // 플레이어, 에너미 튕김 무시
+        Physics.IgnoreLayerCollision(LayerMask.NameToLayer("Player"), LayerMask.NameToLayer("Enemy"), true);
+        
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
@@ -76,6 +86,11 @@ public class PlayerController : MonoBehaviour
 
         cameraY = standCameraY;
         stealthUIManager = StealthUIManager.Instance;
+
+        if (stealthUIManager != null)
+        {
+            stealthUIManager.UpdateHP(100f, 100f);
+        }
     }
 
     // 매프레임 실행
@@ -93,7 +108,7 @@ public class PlayerController : MonoBehaviour
         WeaponInput();      // 발사 처리
         WeaponSwapInput();  // 무기 교체
 
-        HighlightBody();
+        HighlightTarget();
 
         HoldInteract();
         ThrowBody();
@@ -110,13 +125,11 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.LeftShift))
         {
-            // 달리기
-            state.SetMoveState(PlayerMoveState.Run);
+            state.SetMoveState(PlayerMoveState.Run); // 달리기
         }
         else
         {
-            // 걷기
-            state.SetMoveState(PlayerMoveState.Walk);
+            state.SetMoveState(PlayerMoveState.Walk); // 걷기
         }
     }
 
@@ -139,10 +152,9 @@ public class PlayerController : MonoBehaviour
     {
         Vector3 move = transform.right * x + transform.forward * z;
         move = Vector3.ClampMagnitude(move, 1f); // 대각선 이동 속도 고정
-        float speed = state.GetSpeed();
 
-        // 중력 포함 이동
-        Vector3 velocity = move * speed;
+        float speed = state.GetSpeed();
+        Vector3 velocity = move * speed; // 중력 포함 이동
         velocity.y = yVelocity;
 
         characterController.Move(velocity * Time.deltaTime);
@@ -151,7 +163,6 @@ public class PlayerController : MonoBehaviour
     // 점프 처리
     private void Jump()
     {
-        // 점프 처리
         if (characterController.isGrounded && Input.GetKeyDown(KeyCode.Space))
         {
             // 점프 힘 계산
@@ -217,20 +228,26 @@ public class PlayerController : MonoBehaviour
     #endregion
 
     #region 무기 입력
-    // 발사 입력
+    // 키 입력
     private void WeaponInput()
     {
-        if (Input.GetMouseButton(0))
-        {
-            WeaponController currentWeapon = playerWeaponSlot.GetCurrentWeapon();
+        WeaponController currentWeapon = playerWeaponSlot.GetCurrentWeapon();
 
-            if (currentWeapon != null)
+        // 발사
+        if (Input.GetMouseButton(0) && currentWeapon != null)
+        {
+            if (currentWeapon.CanFire())
             {
                 animator.SetTrigger("Shot");
                 currentWeapon.Fire();
-
                 state.SetShot();
             }
+        }
+
+        // 장전
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            currentWeapon.Reload();
         }
     }
 
@@ -249,39 +266,46 @@ public class PlayerController : MonoBehaviour
     }
     #endregion
 
-    #region 스텔스모드 전용 - 시체 관련
-    // 시체 하이라이트
-    private void HighlightBody()
+    #region 스텔스모드 전용 - 시체 / 미션 타겟 관련
+    // 타겟 하이라이트
+    private void HighlightTarget()
     {
         // 이전 하이라이트 제거
         if (currentHighlight != null)
         {
             currentHighlight.SetHighlight(false);
             currentHighlight = null;
-
-            StealthUIManager.Instance.BlindInteraction();
         }
-
         ray.origin = cameraPivot.position;
         ray.direction = cameraPivot.forward;
 
-        if (Physics.Raycast(ray, out hit, interactDistance))
+        if (!Physics.Raycast(ray, out hit, interactDistance))
         {
-            // 시체 태그 확인
-            if (hit.collider.transform.root.CompareTag("DeadBody"))
-            { 
-                DeadBodyHighlight deadBodyHighlight = hit.collider.GetComponentInParent<DeadBodyHighlight>();
-
-                if (deadBodyHighlight != null)
-                {
-                    // 하이라이트 ON
-                    deadBodyHighlight.SetHighlight(true);
-                    currentHighlight = deadBodyHighlight;
-                    // 인터렉션 ON
-                    stealthUIManager.ShowInteraction("[E] 시체 들기");
-                }
-            }
+            stealthUIManager.BlindInteraction(); 
+            return;
         }
+
+        // 시체 체크
+        DeadBodyHighlight deadBodyHighlight = hit.collider.GetComponentInParent<DeadBodyHighlight>();
+        // C4 체크
+        MissionTarget c4 = hit.collider.GetComponentInParent<MissionTarget>();
+
+        if (deadBodyHighlight != null)
+        {
+            // 하이라이트 ON
+            deadBodyHighlight.SetHighlight(true);
+            currentHighlight = deadBodyHighlight;
+            stealthUIManager.ShowInteraction("[E] 시체 들기"); // UI ON
+            return;
+        }
+
+        if (c4 != null)
+        {
+            stealthUIManager.ShowInteraction("[E] C4 회수"); // UI ON
+            return;
+        }
+        // 상호작용 범위 아니면 UI OFF
+        stealthUIManager.BlindInteraction();
     }
 
     // 상호작용 처리 / 상호작용에 걸리는 시간 존재
@@ -292,38 +316,100 @@ public class PlayerController : MonoBehaviour
         ray.origin = cameraPivot.position;
         ray.direction = cameraPivot.forward;
 
-        if (Physics.Raycast(ray, out hit, interactDistance))
-        {
-            if (hit.collider.transform.root.CompareTag("DeadBody"))
-                canInteract = true;
-        }
-
-        if (!canInteract)
+        if (!Physics.Raycast(ray, out hit, interactDistance))
         {
             holdTimer = 0f;
+            if (stealthUIManager != null)
+            {
+                stealthUIManager.HideMissionHold();
+                stealthUIManager.BlindInteraction();
+            }
+            return;
+        }
+        MissionTarget missionTarget = hit.collider.transform.root.GetComponentInChildren<MissionTarget>();
+        DeadBodyHighlight deadBodyHighlight = hit.collider.transform.root.GetComponentInChildren<DeadBodyHighlight>();
+
+        // 아무것도 없으면 종료
+        if (missionTarget == null && deadBodyHighlight == null)
+        {
+            holdTimer = 0f;
+            if (stealthUIManager != null)
+            {
+                stealthUIManager.HideMissionHold();
+                stealthUIManager.BlindInteraction();
+            }
+            return;
+        }
+        canInteract = true;
+
+        // 입력 없으면 초기화
+        if (!Input.GetKey(KeyCode.E))
+        {
+            holdTimer = 0f;
+            if (stealthUIManager != null)
+            {
+                stealthUIManager.HideMissionHold();
+            }
             return;
         }
 
-        if (Input.GetKey(KeyCode.E))
-        {
-            holdTimer += Time.deltaTime;
-            stealthUIManager.ShowInteraction($"들기 진행중... {(holdTimer / holdTime) * 100f:0}%");
+        // 상호 작용 진행 / 홀드 상태
+        holdTimer += Time.deltaTime;
+        float ratio = Mathf.Clamp01(holdTimer / holdTime);
 
-            if (holdTimer >= holdTime)
-            {
-                Interact(hit);
-                holdTimer = 0; // 타이머 초기화
-            }
+        if (stealthUIManager != null)
+        {
+            stealthUIManager.ShowMissionHold();
+            stealthUIManager.UpdateMissionHold(ratio);
         }
-        else
-        { 
-            holdTimer = 0; // 상호작용 실패 및 타이머 초기화
+
+        // C4
+        if (missionTarget != null)
+        {
+            stealthUIManager.ShowInteraction($"C4 회수중... {(ratio * 100f):0}%");
+        }
+        
+        // 시체
+        if (deadBodyHighlight != null)
+        {
+            stealthUIManager.ShowInteraction($"시체 들기... {(ratio * 100f):0}%");
+        }
+
+        if (holdTimer < holdTime) return;
+
+        // C4 처리
+        if (missionTarget != null)
+        {
+            MissionManager.Instance.CompleteMission();
+            Destroy(missionTarget.gameObject);
+        }
+
+        // 시체 처리
+        if (deadBodyHighlight != null)
+        {
+            Interact(hit);
+        }
+
+        holdTimer = 0f;
+
+        if (stealthUIManager != null)
+        {
+            stealthUIManager.HideMissionHold();
+            stealthUIManager.BlindInteraction();
         }
     }
 
     private void Interact(RaycastHit hit)
     {
-        carryObject = hit.collider.transform.root.gameObject;
+        DeadBodyHighlight deadBodyHighlight =
+        hit.collider.GetComponentInParent<DeadBodyHighlight>();
+
+        if (deadBodyHighlight == null)
+        {
+            return;
+        }
+
+        carryObject = deadBodyHighlight.gameObject;
 
         Rigidbody rb = carryObject.GetComponent<Rigidbody>();
 
@@ -331,15 +417,19 @@ public class PlayerController : MonoBehaviour
         {
             rb.velocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
+
             rb.isKinematic = true;
             rb.useGravity = false;
         }
 
         carryObject.transform.SetParent(carryPoint);
+
         carryObject.transform.localPosition = Vector3.zero;
         carryObject.transform.localRotation = Quaternion.identity;
 
         state.SetActionState(PlayerActionState.Carry);
+
+        stealthUIManager.BlindInteraction();
     }
 
     // 시체 던지기 처리
@@ -349,10 +439,9 @@ public class PlayerController : MonoBehaviour
         {
             GameObject deadBody = carryObject;
             carryObject = null;
-
             deadBody.transform.SetParent(null);
-
             Rigidbody rb = deadBody.GetComponent<Rigidbody>();
+
             if (rb != null)
             { 
                 rb.isKinematic = false;

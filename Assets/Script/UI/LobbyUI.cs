@@ -26,6 +26,7 @@ public class LobbyUI : MonoBehaviour
     public GameObject shotgunPanel; // 샷건 패널
 
     [Header("팝업")]
+    public GameObject warningPanel; // 경고 패널
     public GameObject helpPanel;    // 도움말 패널
     public GameObject settingPanel; // 설정 패널
     public GameObject quitPanel;    // 종료 확인 패널
@@ -194,6 +195,20 @@ public class LobbyUI : MonoBehaviour
     #endregion
 
     #region 팝업 창
+    // 경고창 열기
+    public void OpenWarning()
+    {
+        if (warningPanel == null) return;
+        warningPanel.SetActive(true);
+    }
+
+    // 경고창 닫기
+    public void CloseWarning()
+    {
+        if (warningPanel == null) return;
+        warningPanel.SetActive(false);
+    }
+
     // 설정 창 열기
     public void OnClickSetting()
     {
@@ -227,6 +242,16 @@ public class LobbyUI : MonoBehaviour
     // 게임 시작 / 맵이 추가 될 때 코드 추가
     public void OnClickStartGame()
     {
+        // 무기 장착 여부 체크
+        if (PlayerLoadout.Instance == null) return;
+
+        bool hasWeapon = PlayerLoadout.Instance.weaponSlot1 != null && PlayerLoadout.Instance.weaponSlot2 != null;
+        if (!hasWeapon)
+        {
+            OpenWarning();
+            return;
+        }
+
         // 열려있는 패널 기준으로만 검사.
         if (stealthMapSelectPanel.activeSelf)
         {
@@ -244,7 +269,6 @@ public class LobbyUI : MonoBehaviour
                 return;
             }
         }
-        Debug.Log("맵 선택 안됨"); // 예외 처리
     }
 
     // 게임 종료

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Audio;
 
 // BGM / SFX 관리
 // SettingManager 볼륨 값 적용
@@ -6,6 +7,9 @@ using UnityEngine;
 public class SoundManager : MonoBehaviour
 {
     public static SoundManager Instance;
+
+    [Header("오디오 믹서")]
+    [SerializeField] private AudioMixerGroup sfxMixerGroup;
 
     [Header("오디오 소스")]
     [SerializeField] private AudioSource bgmSource; // 배경음

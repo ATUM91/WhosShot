@@ -15,10 +15,6 @@ public class PlayerWeaponSlot : MonoBehaviour
     private GameObject object1;
     private GameObject object2;
 
-    [Header("·±Å¸ÀÓ Åº¾à °ü¸®")]
-    private WeaponRuntimeData slot1Data;
-    private WeaponRuntimeData slot2Data;
-
     // Ä³½Ì WeaponController
     private WeaponController wc1;
     private WeaponController wc2;
@@ -56,34 +52,24 @@ public class PlayerWeaponSlot : MonoBehaviour
         obj.transform.localScale = Vector3.one;
 
         WeaponController wc = obj.GetComponent<WeaponController>();
-
         wc.SetWeaponData(data);
         wc.SetCamera(Camera.main);
-
-        WeaponRuntimeData runtime = new WeaponRuntimeData();
-        runtime.weaponData = data;
-        runtime.currentAmmo = data.maxAmmo;
 
         if (isSlot1)
         {
             object1 = obj;
             wc1 = wc;
-            slot1Data = runtime;
         }
         else
         {
             object2 = obj;
             wc2 = wc;
-            slot2Data = runtime;
         }
     }
 
     // ¹«±â ½º¿Ò ÇÔ¼ö
     public void SetWeapon(int index)
     {
-        // ÇöÀç Åº¾à ÀúÀå
-        SaveAmmo();
-
         // ÀüÃ¼ OFF
         if (object1 != null) object1.SetActive(false);
         if (object2 != null) object2.SetActive(false);
@@ -95,33 +81,21 @@ public class PlayerWeaponSlot : MonoBehaviour
         {
             object1.SetActive(true);
             currentWeapon = wc1;
-            animator.runtimeAnimatorController = wc1.GetWeaponData().runtimeAnimatorController;
+            wc1.PlayEquipSound();
+            wc1.ApplyAnimator(animator);
         }
 
         else if (index == 2 && wc2 != null)
         {
             object2.SetActive(true);
             currentWeapon = wc2;
-            animator.runtimeAnimatorController = wc2.GetWeaponData().runtimeAnimatorController;
-        }
-    }
-
-    // Åº¾à ÀúÀå ÇÔ¼ö
-    public void SaveAmmo()
-    {
-        if (wc1 != null)
-        { 
-            slot1Data.currentAmmo = wc1.GetAmmo(); 
-        }
-        if (wc2 != null)
-        {
-            slot2Data.currentAmmo = wc2.GetAmmo();
+            wc2.PlayEquipSound();
+            wc2.ApplyAnimator(animator);
         }
     }
 
     // ½½·Ô1 ÀåÂø
     public void EquipSlot1() { SetWeapon(1); }
-
     // ½½·Ô2 ÀåÂø
     public void EquipSlot2() { SetWeapon(2); }
 
