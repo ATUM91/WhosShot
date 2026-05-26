@@ -18,13 +18,22 @@ MonoBehaviour:
   weaponIcon: {fileID: 21300000, guid: d536859f38516e641b300b4637defcbf, type: 3}
   damage: 25
   fireRate: 0.4
-  range: 50
-  maxAmmo: 45
-  reloadTime: 2
-  pelletCount: 1
-  spread: 0.2
+  range: 30
+  magazineAmmo: 30
+  maxReserveAmmo: 90
+  reloadTime: 2.5
+  spreaBurst: 0.005
+  spreadRecoverSpeed: 4
+  maxSpread: 0.05
   noiseRadius: 10
   canUseSilencer: 0
   recoilX: 0.1
   recoilY: 0.1
-  runtimeAnimatorController: {fileID: 22100000, guid: f931c6484b3319c4a9e1f8b12ee4bea2, type: 2}
+  baseController: {fileID: 0}
+  overrideController: {fileID: 22100000, guid: f931c6484b3319c4a9e1f8b12ee4bea2, type: 2}
+  fireSound: {fileID: 8300000, guid: 53ec9d5f40abebc4180e90614311ffa9, type: 3}
+  reloadSound: {fileID: 8300000, guid: 4a48b575f16fd5d40917957fdccbd3b1, type: 3}
+  equipSound: {fileID: 8300000, guid: 3e6ee8afdf317754581fd5d47af6df48, type: 3}
+  fireVolume: 1
+  reloadVolume: 1
+  equipVolume: 1
