@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 33000013621678766}
   - component: {fileID: 23000010443579416}
   - component: {fileID: 65000013558613486}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MainFenceS1_3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -103,8 +103,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.71984005, y: 3.2973251, z: 18.681244}
-  m_Center: {x: 0, y: -0.000000059604645, z: -0.00000047683716}
+  m_Size: {x: 0.71984005, y: 6.00511, z: 18.681244}
+  m_Center: {x: 0, y: 1.353893, z: -0.00000047683716}
 --- !u!1 &1042768008187118752
 GameObject:
   m_ObjectHideFlags: 0
@@ -117,7 +117,7 @@ GameObject:
   - component: {fileID: 1012772449950679326}
   - component: {fileID: 1020799893256401832}
   - component: {fileID: 1053217042650535518}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MainFenceS1_2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -208,8 +208,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.71984005, y: 3.2973251, z: 18.681244}
-  m_Center: {x: 0, y: -0.000000059604645, z: -0.00000047683716}
+  m_Size: {x: 0.71984005, y: 6.00511, z: 18.681244}
+  m_Center: {x: 0, y: 1.353893, z: -0.00000047683716}
 --- !u!1 &1328123818486000226
 GameObject:
   m_ObjectHideFlags: 0
@@ -222,7 +222,7 @@ GameObject:
   - component: {fileID: 1304004591539040220}
   - component: {fileID: 1314007041382587754}
   - component: {fileID: 1336180650807916700}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MainFenceS2_2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -313,8 +313,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.71984005, y: 3.2973251, z: 18.681244}
-  m_Center: {x: 0, y: -0.000000059604645, z: -0.00000047683716}
+  m_Size: {x: 0.71984005, y: 6.00511, z: 18.681244}
+  m_Center: {x: 0, y: 1.353893, z: -0.00000047683716}
 --- !u!1 &1969588796074629313
 GameObject:
   m_ObjectHideFlags: 0
@@ -327,7 +327,7 @@ GameObject:
   - component: {fileID: 1955637856955293055}
   - component: {fileID: 1947623708561600457}
   - component: {fileID: 1995097076247956031}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MainFenceS4_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -418,8 +418,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.71984005, y: 3.2973251, z: 18.681244}
-  m_Center: {x: 0, y: -0.000000059604645, z: -0.00000047683716}
+  m_Size: {x: 0.71984005, y: 6.00511, z: 18.681244}
+  m_Center: {x: 0, y: 1.353893, z: -0.00000047683716}
 --- !u!1 &2117229632091097279
 GameObject:
   m_ObjectHideFlags: 0
@@ -432,7 +432,7 @@ GameObject:
   - component: {fileID: 2096243064158211329}
   - component: {fileID: 2104257176072093623}
   - component: {fileID: 2126976147492739649}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MainFenceS4_2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -523,8 +523,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.71984005, y: 3.2973251, z: 18.681244}
-  m_Center: {x: 0, y: -0.000000059604645, z: -0.00000047683716}
+  m_Size: {x: 0.71984005, y: 6.00511, z: 18.681244}
+  m_Center: {x: 0, y: 1.353893, z: 0}
 --- !u!1 &2293066665850963251
 GameObject:
   m_ObjectHideFlags: 0
@@ -537,7 +537,7 @@ GameObject:
   - component: {fileID: 2279994779920515213}
   - component: {fileID: 2269990243429610043}
   - component: {fileID: 2249542862962563021}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MainFenceS3_3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -628,8 +628,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.71984005, y: 3.2973251, z: 18.681244}
-  m_Center: {x: 0, y: -0.000000059604645, z: -0.00000047683716}
+  m_Size: {x: 0.71984005, y: 6.00511, z: 18.681244}
+  m_Center: {x: 0, y: 1.353893, z: -0.00000047683716}
 --- !u!1 &3062620190854385972
 GameObject:
   m_ObjectHideFlags: 0
@@ -642,7 +642,7 @@ GameObject:
   - component: {fileID: 3095710179613660298}
   - component: {fileID: 3085712540689229372}
   - component: {fileID: 3055125536987710410}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MainFenceS2_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -733,8 +733,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.71984005, y: 3.2973251, z: 18.681244}
-  m_Center: {x: 0, y: -0.000000059604645, z: -0.00000047683716}
+  m_Size: {x: 0.71984005, y: 6.00511, z: 18.681244}
+  m_Center: {x: 0, y: 1.353893, z: -0.00000047683716}
 --- !u!1 &3473332941811704740
 GameObject:
   m_ObjectHideFlags: 0
@@ -747,7 +747,7 @@ GameObject:
   - component: {fileID: 3478310805125408282}
   - component: {fileID: 3486342510642861228}
   - component: {fileID: 3519177468020355418}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MainFenceS1_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -838,8 +838,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.71984005, y: 3.2973251, z: 18.681244}
-  m_Center: {x: 0, y: -0.000000059604645, z: -0.00000047683716}
+  m_Size: {x: 0.71984005, y: 6.00511, z: 18.681244}
+  m_Center: {x: 0, y: 1.353893, z: 0}
 --- !u!1 &4292301223169810377
 GameObject:
   m_ObjectHideFlags: 0
@@ -852,7 +852,7 @@ GameObject:
   - component: {fileID: 4316667186668716357}
   - component: {fileID: 4306403154636415629}
   - component: {fileID: 4283348849876624079}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MainFenceV3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -958,7 +958,7 @@ GameObject:
   - component: {fileID: 4469954609988679677}
   - component: {fileID: 4480223173236642869}
   - component: {fileID: 4512073506669630583}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MainFenceV2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1064,7 +1064,7 @@ GameObject:
   - component: {fileID: 6404244265463838421}
   - component: {fileID: 6396511216286373149}
   - component: {fileID: 6374300740597175647}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MainFenceV1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1167,7 +1167,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 338937329859476396}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MainFence
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1215,7 +1215,7 @@ GameObject:
   - component: {fileID: 7289268969840650678}
   - component: {fileID: 7281235069486877310}
   - component: {fileID: 7331523159568484924}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MainFenceV4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1321,7 +1321,7 @@ GameObject:
   - component: {fileID: 8109865817954161427}
   - component: {fileID: 5968658187628955135}
   - component: {fileID: 286703829765074426}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MainFenceS3_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1412,8 +1412,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.71984005, y: 3.2973251, z: 18.681244}
-  m_Center: {x: 0, y: -0.000000059604645, z: -0.00000047683716}
+  m_Size: {x: 0.71984005, y: 6.00511, z: 18.681244}
+  m_Center: {x: 0, y: 1.353893, z: -0.00000047683716}
 --- !u!1 &8072807375036609670
 GameObject:
   m_ObjectHideFlags: 0
@@ -1426,7 +1426,7 @@ GameObject:
   - component: {fileID: 8106179570002800952}
   - component: {fileID: 8095893693264462734}
   - component: {fileID: 8137229518273635960}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: MainFenceS3_2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1517,5 +1517,5 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.71984005, y: 3.2973251, z: 18.681244}
-  m_Center: {x: 0, y: -0.000000059604645, z: -0.00000047683716}
+  m_Size: {x: 0.71984005, y: 6.00511, z: 18.681244}
+  m_Center: {x: 0, y: 1.353893, z: -0.00000047683716}
