@@ -10,6 +10,8 @@ TagManager:
   - LevelPart
   - Dummie
   - DeadBody
+  - Head
+  - Body
   layers:
   - Default
   - TransparentFX
@@ -18,10 +20,10 @@ TagManager:
   - Water
   - UI
   - PlayerView
-  - 
-  - 
-  - 
-  - 
+  - DeadBody
+  - Wall
+  - Enemy
+  - Mission_C4
   - 
   - 
   - 
