@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 // 게임 설정 값 저장 / 불러오기
 // PlayerPrefs를 사용해 저장
@@ -16,7 +17,7 @@ public class SettingManager : MonoBehaviour
     [SerializeField] public float sfxVolume = 1f;      // 효과음
 
     [Header("마우스 감도")]
-    [SerializeField] public float mouseSensitivity = 10f; // 마우스 감도
+    [SerializeField] public float mouseSensitivity = 100f; // 마우스 감도
 
     [Header("화면 설정")]
     [SerializeField] public float brightness = 1f;      // 밝기 조절
@@ -130,6 +131,15 @@ public class SettingManager : MonoBehaviour
         }
     }
 
+    // 마우스 민감도 조절
+    public void SetMouseSensitivity(float value)
+    {
+        mouseSensitivity = value;
+
+        PlayerPrefs.SetFloat("Mouse", mouseSensitivity);
+        PlayerPrefs.Save();
+    }
+
     // 설정 저장
     public void SettingSave()
     {
@@ -158,6 +168,11 @@ public class SettingManager : MonoBehaviour
         screenModeIndex = PlayerPrefs.GetInt("ScreenMode", 0);
         crosshairIndex = PlayerPrefs.GetInt("Crosshair", 0);
         bgmIndex = PlayerPrefs.GetInt("BGM_Index", 0);
+
+        if (mouseSensitivity <= 0f)
+        {
+            mouseSensitivity = 10f;
+        }
     }
 
     #region SettingUI에서 호출해 갈 함수 (분리)

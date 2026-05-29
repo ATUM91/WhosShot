@@ -11,7 +11,7 @@ public class Target : MonoBehaviour
 
     [Header("사망 설정")]
     [SerializeField] private string deadBodyTag = "DeadBody";   // 시체 태그
-    [SerializeField] private string deadBodyLayer = "DeadBody"; // 시체 레이어
+    [SerializeField] private int deadBodyLayer; // 시체 레이어
 
     private float currentHP; // 현재 체력
     private bool isDead; // 사망 여부
@@ -41,10 +41,15 @@ public class Target : MonoBehaviour
     private void Die()
     {
         isDead = true;
-        gameObject.tag = deadBodyTag; // 시체 태그로 변경
+        
+        gameObject.tag = deadBodyTag;
+        gameObject.layer = deadBodyLayer;
 
-        int layerIndex = LayerMask.NameToLayer(deadBodyTag);
-        SetLayerChange(gameObject, layerIndex); // 시체 레이어로 변경
+        transform.Find("HeadShot Bound").tag = deadBodyTag;
+        transform.Find("HeadShot Bound").gameObject.layer = deadBodyLayer;
+
+        transform.Find("BodyHit Bound").tag = deadBodyTag;
+        transform.Find("BodyHit Bound").gameObject.layer = deadBodyLayer;
 
         DeadBodyHighlight deadBodyHighlight = GetComponent<DeadBodyHighlight>();
         if (deadBodyHighlight != null)
@@ -56,31 +61,15 @@ public class Target : MonoBehaviour
         EnemyController enemyController = GetComponent<EnemyController>();
         if (enemyController != null) 
         { 
-            enemyController.OnDead(); 
+            enemyController.OnDead();
         }
-
+        
         // 이동 비활성화
         CharacterController characterController = GetComponent<CharacterController>();
         if (characterController != null) 
         { 
             characterController.enabled = false; 
         }
-
-        // 애니메이터 비활성화
-        Animator animator = GetComponent<Animator>();
-        if (animator != null) 
-        { 
-            animator.SetTrigger("Dead"); 
-        }
-    }
-
-    private void SetLayerChange(GameObject obj, int layer)
-    { 
-        obj.layer = layer;
-
-        foreach (Transform child in obj.transform)
-        {
-            SetLayerChange(child.gameObject, layer);
-        }
+        MissionUI.Instance.AddKill();
     }
 }

@@ -25,6 +25,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float crouchHeight = 1f;
     [SerializeField] private float normalHeight = 2f;
 
+    [Header("마우스 민감도")]
+    [SerializeField] private float sensitivity = 300f;
+
     [Header("시체")]
     [SerializeField] private Transform carryPoint;
     [SerializeField] private float interactDistance = 3f;
@@ -55,7 +58,7 @@ public class PlayerController : MonoBehaviour
 
     private float yVelocity;
     private float xRotation;
-    private float cameraY;
+    private float cameraY; 
 
     // 입력 캐싱
     private float x;
@@ -96,6 +99,8 @@ public class PlayerController : MonoBehaviour
     // 매프레임 실행
     void Update()
     {
+        if (Time.timeScale == 0f) return; // 결과 UI패널 출력 시 입력 차단
+
         InputCache();   // 입력 캐싱
 
         StateInput();
@@ -135,10 +140,8 @@ public class PlayerController : MonoBehaviour
 
     private void MouseLook()
     {
-        float sensitivity = 2f;
-
-        float moveX = Input.GetAxis("Mouse X") * sensitivity;
-        float moveY = Input.GetAxis("Mouse Y") * sensitivity;
+        float moveX = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
+        float moveY = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime;
 
         xRotation -= moveY;
         xRotation = Mathf.Clamp(xRotation, -80f, 80f);
@@ -266,6 +269,14 @@ public class PlayerController : MonoBehaviour
     }
     #endregion
 
+    // 테스트용 기즈모
+    private void OnDrawGizmos()
+    {
+        if (cameraPivot == null) return;
+        Gizmos.color = Color.red;
+        Gizmos.DrawRay(cameraPivot.position, cameraPivot.forward * interactDistance);
+    }
+
     #region 스텔스모드 전용 - 시체 / 미션 타겟 관련
     // 타겟 하이라이트
     private void HighlightTarget()
@@ -316,80 +327,79 @@ public class PlayerController : MonoBehaviour
         ray.origin = cameraPivot.position;
         ray.direction = cameraPivot.forward;
 
-        if (!Physics.Raycast(ray, out hit, interactDistance))
+        if (Physics.Raycast(ray, out hit, interactDistance, ~LayerMask.GetMask("Player")))
         {
-            holdTimer = 0f;
-            if (stealthUIManager != null)
+            GameObject hitObject = hit.collider.gameObject;
+
+            Debug.Log("히트 => " + hitObject.name);
+            Debug.Log("태그 => " + hitObject.tag);
+
+            // C4
+            if (hitObject.CompareTag("Mission_C4"))
             {
-                stealthUIManager.HideMissionHold();
-                stealthUIManager.BlindInteraction();
-            }
-            return;
-        }
-        MissionTarget missionTarget = hit.collider.transform.root.GetComponentInChildren<MissionTarget>();
-        DeadBodyHighlight deadBodyHighlight = hit.collider.transform.root.GetComponentInChildren<DeadBodyHighlight>();
+                canInteract = true;
 
-        // 아무것도 없으면 종료
-        if (missionTarget == null && deadBodyHighlight == null)
-        {
-            holdTimer = 0f;
-            if (stealthUIManager != null)
+                if (Input.GetKey(KeyCode.E))
+                {
+                    // 상호 작용 진행 / 홀드 상태
+                    holdTimer += Time.deltaTime;
+                    float ratio = Mathf.Clamp01(holdTimer / holdTime);
+
+                    stealthUIManager.ShowMissionHold(); // 상호작용 게이지 UI
+                    stealthUIManager.ShowInteraction("C4 회수 중"); // 상호작용 중 텍스트 UI
+                    stealthUIManager.UpdateMissionHold(ratio); // 상호작용 중 게이지 증감 UI
+
+                    if (holdTimer >= holdTime)
+                    {
+                        MissionManager.Instance.CompleteMission();
+                        Destroy(hitObject);
+
+                        holdTimer = 0f;
+                        stealthUIManager.HideMissionHold(); // 완료 후에도 게이지 숨기기
+                    }
+                }
+
+                else
+                {
+                    holdTimer = 0f;
+                    stealthUIManager.HideMissionHold(); // E키 떼면 숨기기
+                    stealthUIManager.ShowInteraction("[E] C4 회수"); // C4 마우스호버 시
+                }
+                return;
+            }
+
+            else if (hitObject.CompareTag("DeadBody"))
             {
-                stealthUIManager.HideMissionHold();
-                stealthUIManager.BlindInteraction();
+                if (carryObject != null) return; // 이미 시체 들고있으면 리턴
+
+                canInteract = true;
+
+                if (Input.GetKey(KeyCode.E))
+                {
+                    holdTimer += Time.deltaTime;
+                    float ratio = Mathf.Clamp01(holdTimer / holdTime);
+
+                    stealthUIManager.ShowDeadBodyHold(); // 상호작용 게이지 UI
+                    stealthUIManager.ShowInteraction("시체 드는 중"); // 상호작용 중 텍스트 UI
+                    stealthUIManager.UpdateDeadBodyHold(ratio); // 상호작용 중 게이지 증감 UI
+
+                    if (holdTimer >= holdTime)
+                    {
+                        Interact(hit);
+                        holdTimer = 0f;
+                        stealthUIManager.HideDeadBodyHold();
+                    }
+                }
+
+                else
+                {
+                    holdTimer = 0f;
+                    stealthUIManager.HideDeadBodyHold(); // E키 떼면 숨기기
+                    stealthUIManager.ShowInteraction("[E] 시체 들기"); // 시체 마우스호버 시
+                }
+                return;
             }
-            return;
         }
-        canInteract = true;
-
-        // 입력 없으면 초기화
-        if (!Input.GetKey(KeyCode.E))
-        {
-            holdTimer = 0f;
-            if (stealthUIManager != null)
-            {
-                stealthUIManager.HideMissionHold();
-            }
-            return;
-        }
-
-        // 상호 작용 진행 / 홀드 상태
-        holdTimer += Time.deltaTime;
-        float ratio = Mathf.Clamp01(holdTimer / holdTime);
-
-        if (stealthUIManager != null)
-        {
-            stealthUIManager.ShowMissionHold();
-            stealthUIManager.UpdateMissionHold(ratio);
-        }
-
-        // C4
-        if (missionTarget != null)
-        {
-            stealthUIManager.ShowInteraction($"C4 회수중... {(ratio * 100f):0}%");
-        }
-        
-        // 시체
-        if (deadBodyHighlight != null)
-        {
-            stealthUIManager.ShowInteraction($"시체 들기... {(ratio * 100f):0}%");
-        }
-
-        if (holdTimer < holdTime) return;
-
-        // C4 처리
-        if (missionTarget != null)
-        {
-            MissionManager.Instance.CompleteMission();
-            Destroy(missionTarget.gameObject);
-        }
-
-        // 시체 처리
-        if (deadBodyHighlight != null)
-        {
-            Interact(hit);
-        }
-
         holdTimer = 0f;
 
         if (stealthUIManager != null)
@@ -401,8 +411,7 @@ public class PlayerController : MonoBehaviour
 
     private void Interact(RaycastHit hit)
     {
-        DeadBodyHighlight deadBodyHighlight =
-        hit.collider.GetComponentInParent<DeadBodyHighlight>();
+        DeadBodyHighlight deadBodyHighlight = hit.collider.GetComponentInParent<DeadBodyHighlight>();
 
         if (deadBodyHighlight == null)
         {
@@ -410,7 +419,6 @@ public class PlayerController : MonoBehaviour
         }
 
         carryObject = deadBodyHighlight.gameObject;
-
         Rigidbody rb = carryObject.GetComponent<Rigidbody>();
 
         if (rb != null)

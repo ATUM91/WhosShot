@@ -18,6 +18,10 @@ public class SoundManager : MonoBehaviour
     [Header("BGM 목록")]
     [SerializeField] private AudioClip[] bgmList;   // 배경음 목록
 
+    // 볼륨 저장용
+    private float currentBGMVolume = 1f;
+    private float currentSFXVolume = 1f;
+
     void Awake()
     {
         // 싱글톤 설정 / 중복 생성 방지
@@ -41,8 +45,11 @@ public class SoundManager : MonoBehaviour
     // 볼륨 갱신
     public void RefreshVolume(float bgm, float sfx)
     {
-        bgmSource.volume = bgm;
-        sfxSource.volume = sfx;
+        currentBGMVolume = bgm;
+        currentSFXVolume = sfx;
+
+        bgmSource.volume = currentBGMVolume;
+        sfxSource.volume = currentSFXVolume;
     }
 
     // BGM 재생 함수
@@ -69,6 +76,6 @@ public class SoundManager : MonoBehaviour
     public void PlaySFX(AudioClip audioClip)
     {
         if (audioClip == null) return;
-        sfxSource.PlayOneShot(audioClip);
+        sfxSource.PlayOneShot(audioClip, currentSFXVolume);
     }
 }

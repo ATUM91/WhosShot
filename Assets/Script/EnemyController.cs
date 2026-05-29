@@ -541,6 +541,11 @@ public class EnemyController : MonoBehaviour
         currentState = EnemyState.Dead;
         MissionManager.Instance?.AddKill();
 
+        detectGauge = 0f; // 게이지 0처리로 죽을때 머리위의 물음표 느낌표 제거
+
+        headSuspectIcon.SetActive(false);
+        headAlertIcon.SetActive(false);
+
         // NavMesh 존재할 때만
         if (navMeshAgent != null && navMeshAgent.enabled && navMeshAgent.isOnNavMesh)
         {

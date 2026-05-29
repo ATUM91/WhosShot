@@ -55,22 +55,13 @@ public class WeaponController : MonoBehaviour
     }
 
     // 현재 탄창 설정
-    public int GetCurrentAmmo()
-    {
-        return currentAmmo;
-    }
+    public int GetCurrentAmmo() { return currentAmmo; }
 
     // 예비 탄창 설정
-    public int GetReserveAmmo()
-    {
-        return reserveAmmo;
-    }
+    public int GetReserveAmmo() { return reserveAmmo;}
 
     // 장전 상태 설정
-    public bool IsReload()
-    {
-        return isReload;
-    }
+    public bool IsReload() { return isReload; }
 
     // 카메라 설정 (발사 기준)
     public void SetCamera(Camera cam)
@@ -121,29 +112,22 @@ public class WeaponController : MonoBehaviour
         currentSpread += weaponData.spreaBurst; // 연속 사격 시 탄퍼짐 증가
         currentSpread = Mathf.Clamp(currentSpread, 0f, weaponData.maxSpread);
 
-        StealthUIManager.Instance?.UpdateAmmo(currentAmmo, reserveAmmo);
-        // 소음 처리
-        //MakeNoise();
+        if (GetComponentInParent<PlayerController>() != null)
+        {
+            StealthUIManager.Instance?.UpdateAmmo(currentAmmo, reserveAmmo);
+        }
     }
 
     // 장전
     public void Reload()
     {
         if (isReload) return; // 장전 중 장전 불가
-        if (reserveAmmo <= 0)
-        {
-            Debug.Log("예비탄 없음");
-            return;
-        }
-        if (currentAmmo >= weaponData.magazineAmmo) 
-        {
-            Debug.Log("이미 탄창 가득참");
-            return;
-        }
+        if (reserveAmmo <= 0) return; // 예비탄 없으면 장전 불가
+        if (currentAmmo >= weaponData.magazineAmmo) return; // 탄창 가득차면 장전 불가
+
         isReload = true;
         PlayReloadSound();
 
-        Debug.Log("장전중...");
         if (animator != null)
         {
             animator.SetTrigger("Reload");
@@ -160,7 +144,11 @@ public class WeaponController : MonoBehaviour
         currentAmmo += reloadAmmo;
         reserveAmmo -= reloadAmmo;
         isReload = false;
-        StealthUIManager.Instance?.UpdateAmmo(currentAmmo, reserveAmmo);
+
+        if (GetComponentInParent<PlayerController>() != null)
+        {
+            StealthUIManager.Instance?.UpdateAmmo(currentAmmo, reserveAmmo);
+        }
         Debug.Log($"장전 완료 / 탄창 : {currentAmmo}발 / 예비탄 : {reserveAmmo}발");
     }
 

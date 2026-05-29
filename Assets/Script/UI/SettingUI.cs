@@ -45,7 +45,6 @@ public class SettingUI : MonoBehaviour
         }
         resolutionDropdown.AddOptions(options); // 옵션 추가
         resolutionDropdown.value = SettingManager.Instance.resolutionIndex; // 저장된 값 적용
-
         resolutionDropdown.RefreshShownValue();
     }
 
@@ -60,20 +59,23 @@ public class SettingUI : MonoBehaviour
     // 배경음 조절
     public void SetBGMVolume(float value)
     {
-        Debug.Log("Slider Value : " + value);
         SettingManager.Instance.SetBGMVolume(value); // 즉시 적용
+        SettingManager.Instance.SettingSave();
     }
 
     // 효과음 조절
     public void SetSFXVolume(float value)
     { 
         SettingManager.Instance.SetSFXVolume(value); // 즉시 적용
+        SettingManager.Instance.SettingSave();
     }
 
     // 마우스 감도 조절
     public void SetMouseSensitivity(float value)
     {
-        SettingManager.Instance.mouseSensitivity = value;
+        float mValue = Mathf.Clamp(value, 0.1f, 50f);
+        SettingManager.Instance.mouseSensitivity = mValue;
+        SettingManager.Instance.SettingSave();
     }
 
     // 밝기 조절
@@ -81,18 +83,21 @@ public class SettingUI : MonoBehaviour
     { 
         SettingManager.Instance.brightness = value;
         SettingManager.Instance.ApplyBrightness(); // 즉시 적용
+        SettingManager.Instance.SettingSave();
     }
 
     // 해상도 변경
     public void SetResolution(int index)
     {
         SettingManager.Instance.SetResolution(index);
+        SettingManager.Instance.SettingSave();
     }
 
     // 화면 모드 변경
     public void SetScreenMode(int index)
     { 
         SettingManager.Instance.SetScreenMode(index);
+        SettingManager.Instance.SettingSave();
     }
 
     // 크로스헤어 변경
@@ -100,11 +105,11 @@ public class SettingUI : MonoBehaviour
     {
         SettingManager.Instance.SetCrosshair(index); // 현재 번호 저장
         crosshairPreviewImage.sprite = crosshairSprite[index]; // 프리뷰 이미지 변경
-    }
 
-    // 저장 버튼
-    public void OnClickSave()
-    { 
+        if (StealthUIManager.Instance != null)
+        { 
+            StealthUIManager.Instance.ApplyCrosshair();
+        }
         SettingManager.Instance.SettingSave();
     }
     #endregion

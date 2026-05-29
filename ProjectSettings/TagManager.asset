@@ -12,6 +12,7 @@ TagManager:
   - DeadBody
   - Head
   - Body
+  - Mission_C4
   layers:
   - Default
   - TransparentFX

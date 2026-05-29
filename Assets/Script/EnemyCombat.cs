@@ -9,11 +9,19 @@ public class EnemyCombat : MonoBehaviour
     [Header("무기 데이터")]
     [SerializeField] private WeaponController weaponController;
 
+    [Header("애니메이터")]
+    [SerializeField] private Animator animator;
+
     void Awake()
     {
         if (weaponController == null)
         { 
             weaponController = GetComponentInChildren<WeaponController>();
+        }
+
+        if (animator == null)
+        { 
+            animator = GetComponent<Animator>();
         }
     }
 
@@ -39,9 +47,11 @@ public class EnemyCombat : MonoBehaviour
     // 공격 처리
     public void Attack()
     {
-        if (weaponController == null)
+        if (weaponController == null) return;
+
+        if (animator != null)
         {
-            return;
+            animator.SetTrigger("Attack");
         }
         weaponController.Fire();
     }

@@ -9,7 +9,7 @@ public class EnemyVision : MonoBehaviour
 {
     [Header("플레이어 감지")]
     [SerializeField] public float viewDistance = 15f;
-    [SerializeField] private float viewAngle = 90f;
+    [SerializeField] private float viewAngle = 120f;
 
     [Header("시체 감지")]
     [SerializeField] private float deadBodyCheckRange = 8f;

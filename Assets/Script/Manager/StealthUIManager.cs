@@ -67,6 +67,7 @@ public class StealthUIManager : MonoBehaviour
         UpdateDetectGauge();
     }
 
+    #region 고정 HUD
     // 저장된 크로스헤어 적용
     public void ApplyCrosshair()
     {
@@ -79,19 +80,6 @@ public class StealthUIManager : MonoBehaviour
         }
         // UI 반영
         crosshairImage.sprite = crosshairSprite[index];
-    }
-
-    // 상호작용 UI 표시
-    public void ShowInteraction(string text)
-    {
-        interactionText.gameObject.SetActive(true);
-        interactionText.text = text;
-    }
-
-    // 상호작용 UI 숨김
-    public void BlindInteraction()
-    {
-        interactionText.gameObject.SetActive(false);
     }
 
     // HP UI 표시
@@ -109,6 +97,59 @@ public class StealthUIManager : MonoBehaviour
         }
     }
 
+    // 탄약 UI 표시
+    public void UpdateAmmo(int currentAmmo, float reserveAmmo)
+    {
+        if (ammoText != null)
+        {
+            ammoText.text = $"{currentAmmo}/{reserveAmmo}";
+        }
+    }
+    #endregion
+
+    #region 상호작용 UI
+    // 상호작용 UI 표시
+    public void ShowInteraction(string text)
+    {
+        interactionText.gameObject.SetActive(true);
+        interactionText.text = text;
+    }
+
+    // 상호작용 UI 숨김
+    public void BlindInteraction()
+    {
+        interactionText.gameObject.SetActive(false);
+    }
+
+    // 시체 UI ON
+    public void ShowDeadBodyHold()
+    {
+        if (deadBodyHoldUI == null) return;
+        deadBodyHoldUI.SetActive(true);
+    }
+
+    // 시체 UI OFF
+    public void HideDeadBodyHold()
+    {
+        if (deadBodyHoldUI == null) return;
+        deadBodyHoldUI.SetActive(false);
+    }
+
+    // 미션 UI ON
+    public void ShowMissionHold()
+    {
+        if (missionHoldUI == null) return;
+        missionHoldUI.SetActive(true);
+    }
+
+    // 미션 UI OFF
+    public void HideMissionHold()
+    {
+        if (missionHoldUI == null) return;
+        missionHoldUI.SetActive(false);
+    }
+    #endregion
+
     // 시체 진행률 업데이트 (0~1)
     public void UpdateDeadBodyHold(float ratio)
     {
@@ -122,15 +163,6 @@ public class StealthUIManager : MonoBehaviour
         if (missionHoldFill == null) return;
 
         missionHoldFill.fillAmount = ratio;
-    }
-
-    // 탄약 UI 표시
-    public void UpdateAmmo(int currentAmmo, float reserveAmmo)
-    {
-        if (ammoText != null)
-        {
-            ammoText.text = $"{currentAmmo}/{reserveAmmo}";
-        }
     }
 
     // 발각 게이지 표시
@@ -162,40 +194,14 @@ public class StealthUIManager : MonoBehaviour
         }
     }
 
-    // 시체 UI ON
-    public void ShowDeadBodyHold()
-    {
-        if (deadBodyHoldUI == null) return;
-        deadBodyHoldUI.SetActive(true);
-    }
-
-    // 시체 UI OFF
-    public void HideDeadBodyHold()
-    {
-        if (deadBodyHoldUI == null) return;
-        deadBodyHoldUI.SetActive(false);
-    }
-
-    // 미션 UI ON
-    public void ShowMissionHold()
-    {
-        if (missionHoldUI == null) return;
-        missionHoldUI.SetActive(true);
-    }
-
-    // 미션 UI OFF
-    public void HideMissionHold()
-    {
-        if (missionHoldUI == null) return;
-        missionHoldUI.SetActive(false);
-    }
-
+    #region 성공 실패 패널 UI
     // 결과 UI
     public void ShowSuccess()
     { 
         successPanel.SetActive(true);
         failPanel.SetActive(false);
         Time.timeScale = 0f;
+        SetUIPanel(true);
     }
 
     public void ShowFail()
@@ -203,12 +209,29 @@ public class StealthUIManager : MonoBehaviour
         failPanel.SetActive(true);
         successPanel.SetActive(false);
         Time.timeScale = 0f;
+        SetUIPanel(true);
     }
 
     // 로비 이동
     public void GoLobby()
     {
         Time.timeScale = 1f;
+        SetUIPanel(false);
         SceneLoading.LoadTo("Scene Lobby");
+    }
+    #endregion
+
+    public void SetUIPanel(bool isPanel)
+    {
+        if (isPanel)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+        else
+        { 
+            Cursor.lockState= CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
     }
 }
