@@ -47,7 +47,11 @@ public class LobbyUI : MonoBehaviour
 
     void Start()
     {
+        // 로비씬 진입시 마우스 포인트 활성화
+        CursorManager.CursorUnlock();
+
         equipPanel.SetActive(false);
+        
         if (PlayerLoadout.Instance != null)
         {
             PlayerLoadout.Instance.Init();

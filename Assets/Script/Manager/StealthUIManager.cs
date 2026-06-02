@@ -201,7 +201,7 @@ public class StealthUIManager : MonoBehaviour
         successPanel.SetActive(true);
         failPanel.SetActive(false);
         Time.timeScale = 0f;
-        SetUIPanel(true);
+        CursorManager.CursorUnlock();
     }
 
     public void ShowFail()
@@ -209,29 +209,17 @@ public class StealthUIManager : MonoBehaviour
         failPanel.SetActive(true);
         successPanel.SetActive(false);
         Time.timeScale = 0f;
-        SetUIPanel(true);
+        CursorManager.CursorUnlock();
     }
 
     // 로비 이동
     public void GoLobby()
     {
         Time.timeScale = 1f;
-        SetUIPanel(false);
         SceneLoading.LoadTo("Scene Lobby");
+        CursorManager.CursorUnlock();
     }
     #endregion
 
-    public void SetUIPanel(bool isPanel)
-    {
-        if (isPanel)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-        else
-        { 
-            Cursor.lockState= CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
-    }
+    
 }
