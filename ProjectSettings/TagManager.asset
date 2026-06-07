@@ -13,6 +13,8 @@ TagManager:
   - Head
   - Body
   - Mission_C4
+  - Arm
+  - Leg
   layers:
   - Default
   - TransparentFX
@@ -25,7 +27,7 @@ TagManager:
   - Wall
   - Enemy
   - Mission_C4
-  - 
+  - Weapon
   - 
   - 
   - 

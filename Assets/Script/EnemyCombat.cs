@@ -12,6 +12,8 @@ public class EnemyCombat : MonoBehaviour
     [Header("애니메이터")]
     [SerializeField] private Animator animator;
 
+    private EnemyController enemyController;
+
     void Awake()
     {
         if (weaponController == null)
@@ -23,6 +25,7 @@ public class EnemyCombat : MonoBehaviour
         { 
             animator = GetComponent<Animator>();
         }
+        enemyController = GetComponent<EnemyController>();
     }
 
     // 무기 설정
@@ -44,15 +47,80 @@ public class EnemyCombat : MonoBehaviour
         return weaponController.GetWeaponData().range;
     }
 
+    // 현재 탄창
+    public int GetCurrentAmmo()
+    {
+        if (weaponController == null) return 0;
+        return weaponController.GetCurrentAmmo();
+    }
+
+    public bool IsReload()
+    { 
+        if (weaponController == null) return false;
+        return weaponController.IsReload();
+    }
+
+    #region 공격
+    public void SetTarget(Transform target)
+    {
+        if (weaponController == null) return;
+        weaponController.SetTarget(target);
+    }
+
     // 공격 처리
-    public void Attack()
+    public bool Attack()
+    {
+        if (weaponController == null) return false;
+        if (weaponController.IsReload()) return false;
+        if (!weaponController.CanFire()) return false;
+
+        weaponController.Fire(); // 실제 발사
+        return true;
+    }
+
+    public void StopAttack()
+    {
+        if (animator == null) return;
+
+        animator.SetBool("IsAttack",false);
+    }
+
+    // 공격 자세 유지
+    public void KeepAttackAnimation(bool value)
+    {
+        if (animator == null) return;
+
+        animator.SetBool("IsAttack", value);
+    }
+    #endregion
+
+    #region 장전
+    // 장전 처리
+    public bool Reload()
+    {
+        if (weaponController == null) return false;
+        if (weaponController.IsReload()) return false;
+        if (!weaponController.Reload()) return false;
+
+        animator.SetBool("IsAttack", false);
+
+        animator.ResetTrigger("Reload");
+        animator.SetTrigger("Reload");
+        return true;
+    }
+
+    // 애니메이션 이벤트
+    public void FinishReload()
     {
         if (weaponController == null) return;
 
-        if (animator != null)
-        {
-            animator.SetTrigger("Attack");
+        weaponController.FinishReload();
+        animator.ResetTrigger("Reload");
+
+        if (enemyController != null)
+        { 
+            enemyController.OnReload();
         }
-        weaponController.Fire();
     }
+    #endregion
 }

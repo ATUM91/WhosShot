@@ -9,7 +9,7 @@ public class EnemyVision : MonoBehaviour
 {
     [Header("플레이어 감지")]
     [SerializeField] public float viewDistance = 15f;
-    [SerializeField] private float viewAngle = 120f;
+    [SerializeField] private float viewAngle = 200f;
 
     [Header("시체 감지")]
     [SerializeField] private float deadBodyCheckRange = 8f;
@@ -41,20 +41,9 @@ public class EnemyVision : MonoBehaviour
     {
         if (player == null) return false;
 
-        Vector3 origin = transform.position + Vector3.up * 1.5f; // 적의 눈 위치
-        Vector3 target = player.position + Vector3.up * 1.0f;    // 플레이어 몸통 위치
-
-        Vector3 toTarget = target - origin;
-
-        float distance = Vector3.Distance(origin, player.position);
-        if (distance > viewDistance) return false;
-        // 시야각 체크
-        float angle = Vector3.Angle(transform.forward, toTarget); 
-        if (angle > viewAngle * 0.5f) return false;
-        // 벽 체크
-        if (Physics.Raycast(origin, toTarget.normalized, toTarget.magnitude, obstacleMask)) return false;
+        Vector3 target = player.position + Vector3.up * 1.0f;
         
-        return true;
+        return CanSeeTarget(target, viewDistance);
     }
     #endregion
 
@@ -105,8 +94,29 @@ public class EnemyVision : MonoBehaviour
         // 최종 시체 없음
         if (closestBody == null) return false;
 
+        if (!CanSeeTarget(closestBody.position, deadBodyCheckRange)) return false;
+
         // 시체 위치 반환
         deadBodyPosition = closestBody.position;
+        return true;
+    }
+    #endregion
+
+    #region 시야각/벽 체크 (중복 간소화)
+    private bool CanSeeTarget(Vector3 target, float maxDistance)
+    {
+        Vector3 origin = transform.position + Vector3.up * 1.5f;
+        Vector3 toTarget = target - origin;
+
+        if (toTarget.magnitude > maxDistance) return false;
+        
+        // 시야각 체크
+        float angle = Vector3.Angle(transform.forward, toTarget);
+        if (angle > viewAngle * 0.5f) return false;
+
+        // 벽 체크
+        if (Physics.Raycast(origin, toTarget.normalized, toTarget.magnitude, obstacleMask)) return false;
+
         return true;
     }
     #endregion

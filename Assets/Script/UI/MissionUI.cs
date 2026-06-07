@@ -36,6 +36,7 @@ public class MissionUI : MonoBehaviour
             "C4 회수\n" +
             "\n" +
             "미션 실패 조건\n" +
+            "플레이어 사망\n" +
             "4명 이상 사살\n" +
             $"적 사살 가능 수 ( {enemyKillCount} / {enemyKillLimit} )";
     }

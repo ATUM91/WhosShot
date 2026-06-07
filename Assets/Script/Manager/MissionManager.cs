@@ -51,6 +51,7 @@ public class MissionManager : MonoBehaviour
         if (missionFailed) return;
 
         missionFailed = true;
+
         StealthUIManager.Instance.ShowFail();
     }
 

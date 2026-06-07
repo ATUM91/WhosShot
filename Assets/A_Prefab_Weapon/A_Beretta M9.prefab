@@ -50,7 +50,6 @@ MonoBehaviour:
   weaponData: {fileID: 11400000, guid: 7ff6975dfe46a0c4bb62e55e0c000373, type: 2}
   playerCamera: {fileID: 0}
   muzzlePoint: {fileID: 8721787557398712991}
-  bulletPrefab: {fileID: 6502530114880555619, guid: 4612e4b347a08c349beda8b2c036a3f2, type: 3}
 --- !u!82 &8059395134914906004
 AudioSource:
   m_ObjectHideFlags: 0
@@ -72,7 +71,7 @@ AudioSource:
   Priority: 128
   DopplerLevel: 1
   MinDistance: 1
-  MaxDistance: 500
+  MaxDistance: 100
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0
@@ -107,7 +106,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0

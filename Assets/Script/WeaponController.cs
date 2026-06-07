@@ -14,6 +14,10 @@ public class WeaponController : MonoBehaviour
     [Header("카메라")]
     [SerializeField] private Camera playerCamera;   // 발사 기준 카메라
 
+    [Header("총구 위치")]
+    [SerializeField] private Transform muzzlePoint; // 총구 불꽃 이펙트 위치
+
+    private Transform target;
     private Animator animator;
     private AudioSource audioSource;
 
@@ -24,6 +28,7 @@ public class WeaponController : MonoBehaviour
     private float currentSpread;
 
     private bool isReload;
+    public bool _reload_ => isReload;
     private bool isSilencer;
 
     void Awake()
@@ -69,6 +74,13 @@ public class WeaponController : MonoBehaviour
         playerCamera = cam;
     }
 
+    public void SetTarget(Transform newTarget)
+    {
+        Debug.Log("WeaponController SetTarget : " + newTarget);
+
+        target = newTarget;
+    }
+
     // 애니메이터
     public void ApplyAnimator(Animator animator)
     {
@@ -88,6 +100,16 @@ public class WeaponController : MonoBehaviour
     public bool CanFire()
     {
         return Time.time >= nextFireTime && currentAmmo > 0;
+    }
+
+    public bool CanReload()
+    {
+        if (weaponData == null) return false;
+        if (isReload) return false; // 장전 중 장전 불가
+        if (reserveAmmo <= 0) return false; // 예비탄 없으면 장전 불가
+        if (currentAmmo >= weaponData.magazineAmmo) return false; // 탄창 가득차면 장전 불가
+
+        return true;
     }
 
     // 발사 실행 함수
@@ -119,24 +141,17 @@ public class WeaponController : MonoBehaviour
     }
 
     // 장전
-    public void Reload()
+    public bool Reload()
     {
-        if (isReload) return; // 장전 중 장전 불가
-        if (reserveAmmo <= 0) return; // 예비탄 없으면 장전 불가
-        if (currentAmmo >= weaponData.magazineAmmo) return; // 탄창 가득차면 장전 불가
+        if (!CanReload()) return false;
 
         isReload = true;
         PlayReloadSound();
-
-        if (animator != null)
-        {
-            animator.SetTrigger("Reload");
-        }
-        Invoke(nameof(FinalReload), weaponData.reloadTime);
+        return true;
     }
 
-    // 최종 장전
-    private void FinalReload()
+    // 애니메이션 이벤트 전용
+    public void FinishReload()
     {
         int needAmmo = weaponData.magazineAmmo - currentAmmo;
         int reloadAmmo = Mathf.Min(needAmmo, reserveAmmo);
@@ -155,6 +170,12 @@ public class WeaponController : MonoBehaviour
     // 실제 발사
     private void Shoot()
     {
+        // 총구 불꽃 / 발사 이펙트
+        GameObject muzzleFire = EffectPool.Instance.GetMuzzleFire();
+
+        muzzleFire.transform.position = muzzlePoint.position;
+        muzzleFire.transform.rotation = muzzlePoint.rotation;
+
         Ray ray;
 
         // 플레이어
@@ -166,34 +187,48 @@ public class WeaponController : MonoBehaviour
         // AI
         else
         {
-            ray = new Ray(transform.position, transform.forward);
+            if (target != null)
+            {
+                Vector3 targetPos = target.position + Vector3.up * 1.4f;
+                Vector3 shootDir = (targetPos - muzzlePoint.position).normalized;
+                ray = new Ray(muzzlePoint.position, shootDir);
+            }
+            else
+            {
+                ray = new Ray(muzzlePoint.position, muzzlePoint.forward);
+            }
         }
 
         Vector3 targetPoint = ray.GetPoint(100f); // 정확한 기준점을 생성
+
         Vector3 dir = (targetPoint - ray.origin).normalized; // 총구 -> 목표방향
         dir = ApplySpread(dir); // 탄퍼짐 적용
-        int mask = ~(1 << LayerMask.NameToLayer("Player")); // 플레이어 레이어 제외
-        RaycastHit hit;
 
+        int mask = Physics.DefaultRaycastLayers;
+
+        if (playerCamera != null)
+        {
+            int playerLayer = LayerMask.NameToLayer("Player"); // 플레이어 레이어 제외
+            mask = ~(1 << playerLayer);
+        }
+        RaycastHit hit;
+        
+        // 레이 시각화
         if (Physics.Raycast(ray.origin, dir, out hit, weaponData.range, mask))
         {
             // 자기 자신이면 무시
             if (hit.collider.transform.root == transform.root) return;
+            
             Target target = hit.collider.GetComponentInParent<Target>();
 
             // Player, Enemy 맞았을 때 / 피 튐 생성
             if (target != null)
             {
-                float finalDamage = weaponData.damage;
-                // 헤드샷
-                if (hit.collider.CompareTag("Head"))
-                {
-                    finalDamage *= 3f;
-                }
+                float finalDamage = target.CheckDamage(hit.collider.tag, weaponData.damage);
                 target.TakeDamage(finalDamage);
 
                 GameObject blood = EffectPool.Instance.GetBlood();  // 피 튐 이펙트 가져오기
-                blood.transform.position = hit.point;   // 위치 적용
+                blood.transform.position = hit.point + hit.normal * 0.02f;   // 위치 적용
                 blood.transform.rotation = Quaternion.LookRotation(hit.normal); // 방향 적용
             }
             // 벽 맞았을 때 / 총알 자국 생성
@@ -265,37 +300,4 @@ public class WeaponController : MonoBehaviour
         audioSource.PlayOneShot(weaponData.reloadSound);
     }
     #endregion
-
-    /*
-    // 소음 처리
-    private void MakeNoise()
-    {
-        // 소음기 장착 + 사용 가능 무기라면 AI 감지 차단
-        if (isSilencer && weaponData.canUseSilencer) return;
-
-        Collider[] hits =
-            Physics.OverlapSphere
-            (
-                transform.position,
-                weaponData.noiseRadius
-            );
-
-        int i = 0;
-
-        while (i < hits.Length)
-        {
-            EnemyController enemy =
-                hits[i].GetComponentInParent<EnemyController>();
-
-            if (enemy != null)
-            {
-                enemy.OnHearSound(transform.position);
-            }
-
-            i++;
-        }
-
-        // AIManager에 소리 전달 로직 필요
-    }
-    */
 }

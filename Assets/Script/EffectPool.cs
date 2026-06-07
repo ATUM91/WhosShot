@@ -11,13 +11,16 @@ public class EffectPool : MonoBehaviour
     [Header("ÀÌÆåÆ® ÇÁ¸®ÆÕ / Ç® °³¼ö")]
     [SerializeField] private GameObject bulletHolePrefab;
     [SerializeField] private GameObject bloodPrefab;
-    [SerializeField] private int effectPoolSize = 30;
+    [SerializeField] private GameObject muzzleFirePrefab;
+    [SerializeField] private int effectPoolSize = 50;
 
     private GameObject[] bulletHolePool;    // ÃÑ¾ËÀÚ±¹ Ç®
     private GameObject[] bloodPool;         // ÇÇ Æ¦ Ç®
+    private GameObject[] muzzleFirePool;    // ÃÑ±¸ ºÒ²É Ç®
     
     private int bulletHoleIndex;
     private int bloodIndex;
+    private int muzzleFireIndex;
 
     void Awake()
     {
@@ -30,6 +33,7 @@ public class EffectPool : MonoBehaviour
     {
         bulletHolePool = new GameObject[effectPoolSize];
         bloodPool = new GameObject[effectPoolSize];
+        muzzleFirePool = new GameObject[effectPoolSize];
 
         for (int i = 0; i < effectPoolSize; i++)
         {
@@ -40,6 +44,10 @@ public class EffectPool : MonoBehaviour
             GameObject blood = Instantiate(bloodPrefab, transform);
             blood.SetActive(false);
             bloodPool[i] = blood; // ÇÇ Æ¦
+
+            GameObject muzzleFire = Instantiate(muzzleFirePrefab, transform);
+            muzzleFire.SetActive(false);
+            muzzleFirePool[i] = muzzleFire; // ÃÑ±¸ ºÒ²É 
         }
     }
 
@@ -71,5 +79,20 @@ public class EffectPool : MonoBehaviour
         blood.SetActive(false);
         blood.SetActive(true);
         return blood;
+    }
+
+    // ÃÑ±¸ ºÒ²É °¡Á®¿À±â
+    public GameObject GetMuzzleFire()
+    { 
+        GameObject muzzleFire = muzzleFirePool[muzzleFireIndex];
+        muzzleFireIndex++;
+
+        if (muzzleFireIndex >= muzzleFirePool.Length)
+        { 
+            muzzleFireIndex = 0;
+        }
+        muzzleFire.SetActive(false);
+        muzzleFire.SetActive(true);
+        return muzzleFire;
     }
 }

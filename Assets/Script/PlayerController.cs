@@ -1,6 +1,5 @@
-using Unity.VisualScripting;
+using System.Collections;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 // 플레이어 입력 처리
 // 이동 / 점프 / 앉기
@@ -30,8 +29,12 @@ public class PlayerController : MonoBehaviour
 
     [Header("시체")]
     [SerializeField] private Transform carryPoint;
+    [SerializeField] private Rigidbody hipsRb;
     [SerializeField] private float interactDistance = 3f;
-    [SerializeField] private float throwForce = 5f;
+    [SerializeField] private float throwForce = 10f;
+
+    [Header("벽 레이어 체크")]
+    [SerializeField] private LayerMask obstacleMask;
 
     [Header("미션 목표 상호 작용")]
     [SerializeField] private float missionTargetHoldTime = 3f;
@@ -46,6 +49,7 @@ public class PlayerController : MonoBehaviour
     public PlayerWeaponSlot playerWeaponSlot;
 
     private CharacterController characterController;
+    private WeaponController reloadWeapon;
     private PlayerState state;
 
     private GameObject carryObject;
@@ -53,6 +57,7 @@ public class PlayerController : MonoBehaviour
     private DeadBodyHighlight currentHighlight;
     private StealthUIManager stealthUIManager;
 
+    
     private RaycastHit hit;
     private Ray ray;
 
@@ -64,11 +69,15 @@ public class PlayerController : MonoBehaviour
     private float x;
     private float z;
 
+    private float reloadTimer;
+
     private float missionTargetHoldTimer;  // 목표물 상호작용 누적 시간 
     private float holdTimer;        // 시체 상호작용 누적 시간
 
     private bool canInteract;
     private bool tryCrouch;
+    private bool isCarry = false;
+    private bool isThrow = false;
 
     void Awake()
     {
@@ -78,11 +87,12 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
+        CursorManager.CursorLock();
+
         // 플레이어, 에너미 튕김 무시
         Physics.IgnoreLayerCollision(LayerMask.NameToLayer("Player"), LayerMask.NameToLayer("Enemy"), true);
-        
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        // 플레이어, 시체 충돌 무시
+        Physics.IgnoreLayerCollision(LayerMask.NameToLayer("Player"), LayerMask.NameToLayer("DeadBody"), true);
 
         characterController.height = normalHeight;
         characterController.center = new Vector3(0, normalHeight / 2f, 0);
@@ -112,10 +122,11 @@ public class PlayerController : MonoBehaviour
 
         WeaponInput();      // 발사 처리
         WeaponSwapInput();  // 무기 교체
-
+        WeaponReload();     // 무기 장전
         HighlightTarget();
 
         HoldInteract();
+        CarryBody();
         ThrowBody();
     }
 
@@ -250,7 +261,14 @@ public class PlayerController : MonoBehaviour
         // 장전
         if (Input.GetKeyDown(KeyCode.R))
         {
-            currentWeapon.Reload();
+            if (currentWeapon != null)
+            {
+                if (currentWeapon.Reload())
+                {
+                    reloadWeapon = currentWeapon;
+                    reloadTimer = currentWeapon.GetWeaponData().reloadTime;
+                }
+            }
         }
     }
 
@@ -265,6 +283,19 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha2))
         {
             playerWeaponSlot.EquipSlot2();
+        }
+    }
+
+    // 무기 장전
+    private void WeaponReload()
+    {
+        if (reloadWeapon == null) return;
+        reloadTimer -= Time.deltaTime;
+
+        if (reloadTimer <= 0f)
+        { 
+            reloadWeapon.FinishReload();
+            reloadWeapon = null;
         }
     }
     #endregion
@@ -290,9 +321,11 @@ public class PlayerController : MonoBehaviour
         ray.origin = cameraPivot.position;
         ray.direction = cameraPivot.forward;
 
+        RaycastHit hit;
+
         if (!Physics.Raycast(ray, out hit, interactDistance))
         {
-            stealthUIManager.BlindInteraction(); 
+            stealthUIManager.BlindInteraction();
             return;
         }
 
@@ -330,9 +363,7 @@ public class PlayerController : MonoBehaviour
         if (Physics.Raycast(ray, out hit, interactDistance, ~LayerMask.GetMask("Player")))
         {
             GameObject hitObject = hit.collider.gameObject;
-
-            Debug.Log("히트 => " + hitObject.name);
-            Debug.Log("태그 => " + hitObject.tag);
+            Transform root = hit.collider.transform.root;
 
             // C4
             if (hitObject.CompareTag("Mission_C4"))
@@ -368,8 +399,9 @@ public class PlayerController : MonoBehaviour
                 return;
             }
 
-            else if (hitObject.CompareTag("DeadBody"))
+            else if (root.CompareTag("DeadBody"))
             {
+                if (isCarry) return;
                 if (carryObject != null) return; // 이미 시체 들고있으면 리턴
 
                 canInteract = true;
@@ -411,56 +443,118 @@ public class PlayerController : MonoBehaviour
 
     private void Interact(RaycastHit hit)
     {
-        DeadBodyHighlight deadBodyHighlight = hit.collider.GetComponentInParent<DeadBodyHighlight>();
+        if (hit.collider == null) return;
 
-        if (deadBodyHighlight == null)
-        {
-            return;
-        }
+        DeadBodyHighlight deadBodyHighlight = hit.collider.GetComponentInParent<DeadBodyHighlight>();
+        if (deadBodyHighlight == null) return;
 
         carryObject = deadBodyHighlight.gameObject;
-        Rigidbody rb = carryObject.GetComponent<Rigidbody>();
+        isCarry = true;
 
-        if (rb != null)
+        Rigidbody[] rigidbodies = carryObject.GetComponentsInChildren<Rigidbody>();
+
+        int i = 0;
+        while (i < rigidbodies.Length)
         {
-            rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
+            rigidbodies[i].velocity = Vector3.zero;
+            rigidbodies[i].angularVelocity = Vector3.zero;
+            rigidbodies[i].isKinematic = true;
+            rigidbodies[i].useGravity = false;
 
-            rb.isKinematic = true;
-            rb.useGravity = false;
+            i++;
         }
 
-        carryObject.transform.SetParent(carryPoint);
+        carryObject.transform.position = carryPoint.position;
+        carryObject.transform.rotation = carryPoint.rotation;
 
-        carryObject.transform.localPosition = Vector3.zero;
-        carryObject.transform.localRotation = Quaternion.identity;
+        Animator anim = carryObject.GetComponent<Animator>();
+        if (anim != null)
+        {
+            anim.enabled = false;
+        }
 
         state.SetActionState(PlayerActionState.Carry);
-
         stealthUIManager.BlindInteraction();
     }
 
-    // 시체 던지기 처리
+    private void CarryBody()
+    {
+        if (carryObject == null || !isCarry || isThrow) return;
+
+        Rigidbody[] rbs = carryObject.GetComponentsInChildren<Rigidbody>();
+        
+        // 첫 캐리 안정화
+        for (int i = 0; i < rbs.Length; i++)
+        {
+            rbs[i].WakeUp();
+            if (!rbs[i].isKinematic)
+            {
+                rbs[i].velocity = Vector3.zero;
+                rbs[i].angularVelocity = Vector3.zero;
+            }
+        }
+        
+        Rigidbody hips = carryObject.GetComponentInChildren<Rigidbody>();
+
+        if (hips == null) return;
+
+        // 안정화 타이밍 보정
+        hips.position = carryPoint.position;
+        hips.rotation = carryPoint.rotation;
+    }
+
+    // 시체 던지기 처리 (1) AddForce / foreach 제거 방식 / 단순화
     private void ThrowBody()
     {
-        if (Input.GetKeyDown(KeyCode.F) && carryObject != null)
+        if (carryObject == null || !isCarry) return;
+
+        if (!Input.GetKeyDown(KeyCode.F)) return;
+
+        Debug.Log("THROW");
+
+        GameObject body = carryObject;
+        carryObject = null;
+        isCarry = false;
+
+        state.SetActionState(PlayerActionState.None);
+
+        // Animator 끄기
+        Animator anim = body.GetComponent<Animator>();
+        if (anim != null)
         {
-            GameObject deadBody = carryObject;
-            carryObject = null;
-            deadBody.transform.SetParent(null);
-            Rigidbody rb = deadBody.GetComponent<Rigidbody>();
-
-            if (rb != null)
-            { 
-                rb.isKinematic = false;
-                rb.useGravity = true;
-                rb.velocity = Vector3.zero;
-                rb.angularVelocity = Vector3.zero;
-
-                rb.AddForce(cameraPivot.forward * throwForce, ForceMode.Impulse);
-            }
-            state.SetActionState(PlayerActionState.None);
+            anim.enabled = false;
         }
+
+        Rigidbody[] rbs = body.GetComponentsInChildren<Rigidbody>();
+
+        // 힘 줄 대상 찾기
+        Rigidbody hips = null;
+
+        // 물리 활성화
+        for (int i = 0; i < rbs.Length; i++)
+        {
+            rbs[i].isKinematic = false;
+            rbs[i].useGravity = true;
+            rbs[i].velocity = Vector3.zero;
+            rbs[i].angularVelocity = Vector3.zero;
+
+            if (rbs[i].name == "ArtStore3D_Hips")
+            {
+                hips = rbs[i];
+            }
+        }
+
+        if (hips != null)
+        {
+            hips.position = carryPoint.position;
+            hips.rotation = carryPoint.rotation;
+            Vector3 dir = cameraPivot.forward.normalized + Vector3.up * 0.5f;
+
+            // 순간 힘
+            hips.AddForce(dir * 45f, ForceMode.VelocityChange);
+        }
+
+        Debug.Log("DONE");
     }
     #endregion
 }

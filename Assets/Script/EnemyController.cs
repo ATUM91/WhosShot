@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.Rendering;
 
 // 적 AI 메인 상태머신
 // 공용 / 스텔스 / 팀데스매치 로직 분리
@@ -19,6 +18,7 @@ public class EnemyController : MonoBehaviour
         Search,     // 수색
         Chase,      // 추적
         Attack,     // 공격
+        Reload,     // 장전
         Return,     // 복귀
         Dead,       // 사망
         DeadBody    // 시체
@@ -32,6 +32,7 @@ public class EnemyController : MonoBehaviour
     [Header("현재 상태")]
     [SerializeField] private EnemyState currentState;
     [SerializeField] private AlertTagetType alertTagetType;
+    public EnemyState state => currentState;
 
     [Header("게임 모드")]
     [SerializeField] private ModeData modeData;
@@ -61,10 +62,11 @@ public class EnemyController : MonoBehaviour
 
     [Header("발각 게이지")]
     [SerializeField] private float detectMax = 100f;        // 게이지 최대치
-    [SerializeField] private float detectSpeed = 30f;       // 게이지 올라가는 속도
-    [SerializeField] private float detectLoseSpeed = 15f;   // 게이지 내려가는 속도
+    [SerializeField] private float detectSpeed = 100f;       // 게이지 올라가는 속도
+    [SerializeField] private float detectLoseSpeed = 20f;   // 게이지 내려가는 속도
     #endregion
 
+    private WeaponController weaponController;
     private EnemyVision enemyVision;
     private EnemyCombat enemyCombat;
 
@@ -94,31 +96,53 @@ public class EnemyController : MonoBehaviour
         enemyVision = GetComponent<EnemyVision>();
         enemyCombat = GetComponent<EnemyCombat>();
         animator = GetComponent<Animator>();
-
+        
         navMeshAgent.updateRotation = true;
     }
 
     void Start()
     {
+        // 시작 위치 저장
+        startPosition = transform.position;
+        // 무기 장착
+        EquipRandomWeapon();
+
         // 플레이어 찾기
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
         if (playerObject != null)
         {
             player = playerObject.transform;
+            enemyCombat.SetTarget(player);
         }
-        // 시작 위치 저장
-        startPosition = transform.position;
-        // 무기 장착
-        EquipRandomWeapon();
         // 시작 상태
         ChangeState(EnemyState.Patrol);
+        Debug.Log(navMeshAgent.isOnNavMesh);
     }
 
     void Update()
     {
-        // 사망 시 종료
-        if (currentState == EnemyState.Dead) return;
+        if (currentState == EnemyState.Dead || currentState == EnemyState.DeadBody)
+        {
+            UpdateAnimation();
+            UpdateStateUI();
+            return;
+        }
 
+        if (currentState == EnemyState.Attack)
+        {
+            UpdateAttack();
+            UpdateAnimation();
+            UpdateStateUI();
+            return;
+        }
+
+        if (currentState == EnemyState.Reload)
+        {
+            UpdateReload();
+            UpdateAnimation();
+            UpdateStateUI();
+            return;
+        }
         // 상태 업데이트
         UpdatePerception();
         UpdateState();
@@ -155,6 +179,12 @@ public class EnemyController : MonoBehaviour
                 weaponIK.SetLeftHandTarget(leftTarget);
             }
         }
+        weaponController = GetComponentInChildren<WeaponController>();
+
+        if (weaponController == null)
+        {
+            Debug.Log("웨폰 컨트롤러 없음");
+        }
     }
 
     // 감지 센서 역할
@@ -164,6 +194,16 @@ public class EnemyController : MonoBehaviour
 
         bool seePlayer = enemyVision.CanSeePlayer();
         bool seeBody = enemyVision.CanSeeDeadBody(out Vector3 bodyPos);
+
+        // 2f 거리내로 근접하면 즉시 발각
+        if (seePlayer)
+        {
+            float distance = Vector3.Distance(transform.position, player.position);
+            if (distance <= 2f)
+            {
+                detectGauge = detectMax;
+            }
+        }
 
         // 플레이어 발견 시
         if (seePlayer)
@@ -184,6 +224,7 @@ public class EnemyController : MonoBehaviour
                 currentState == EnemyState.Alert ||
                 currentState == EnemyState.Chase ||
                 currentState == EnemyState.Attack ||
+                currentState == EnemyState.Reload ||
                 currentState == EnemyState.Search;
 
             if (!isDetect)
@@ -205,7 +246,8 @@ public class EnemyController : MonoBehaviour
         if (detectGauge >= detectMax &&
             currentState != EnemyState.Alert &&
             currentState != EnemyState.Chase &&
-            currentState != EnemyState.Attack)
+            currentState != EnemyState.Attack &&
+            currentState != EnemyState.Reload)
         {
             ChangeState(EnemyState.Alert);
         }
@@ -223,7 +265,7 @@ public class EnemyController : MonoBehaviour
         switch (currentState)
         {
             // 걷기
-            case EnemyState.Patrol:
+            case EnemyState.Patrol:   
                 moveSpeed = 0.5f;
                 break;
 
@@ -237,6 +279,7 @@ public class EnemyController : MonoBehaviour
             case EnemyState.Idle:
             case EnemyState.Alert:
             case EnemyState.Attack:
+            case EnemyState.Reload:
             case EnemyState.Dead:
             case EnemyState.DeadBody:
                 moveSpeed = 0f;
@@ -250,6 +293,7 @@ public class EnemyController : MonoBehaviour
     {
         if (currentState == state) return;
         currentState = state;
+        enemyCombat.StopAttack();
 
         switch (state)
         {
@@ -261,7 +305,7 @@ public class EnemyController : MonoBehaviour
 
             // 대기
             case EnemyState.Idle:
-                idleTimer = 2f;
+                idleTimer = idleTime;
                 navMeshAgent.isStopped = true;
                 break;
 
@@ -289,6 +333,13 @@ public class EnemyController : MonoBehaviour
             // 공격
             case EnemyState.Attack:
                 navMeshAgent.isStopped = true;
+                enemyCombat.KeepAttackAnimation(true);
+                break;
+
+            // 장전
+            case EnemyState.Reload:
+                navMeshAgent.isStopped = true;
+                enemyCombat.Reload();
                 break;
 
             // 복귀
@@ -301,6 +352,18 @@ public class EnemyController : MonoBehaviour
     // 상태 업데이트
     private void UpdateState()
     {
+        if (currentState == EnemyState.Dead)
+        {
+            UpdateDead();
+            return;
+        }
+
+        if (currentState == EnemyState.DeadBody)
+        { 
+            UpdateDeadBody();
+            return;
+        }
+
         switch (currentState)
         {
             case EnemyState.Patrol: UpdatePatrol(); break;
@@ -309,9 +372,8 @@ public class EnemyController : MonoBehaviour
             case EnemyState.Search: UpdateSearch(); break;
             case EnemyState.Chase: UpdateChase(); break;
             case EnemyState.Attack: UpdateAttack(); break;
+            case EnemyState.Reload: UpdateReload(); break;
             case EnemyState.Return: UpdateReturn(); break;
-            case EnemyState.Dead: UpdateDead(); break;
-            case EnemyState.DeadBody: UpdateDeadBody(); break;
         }
     }
     #endregion
@@ -321,12 +383,10 @@ public class EnemyController : MonoBehaviour
     private void UpdatePatrol()
     {
         if (patrolPoint == null || patrolPoint.Length == 0) return;
+        if (!navMeshAgent.enabled || !navMeshAgent.isOnNavMesh) return;
 
         // 순찰 경로 이동 유지
-        if (!navMeshAgent.hasPath)
-        {
-            navMeshAgent.SetDestination(patrolPoint[patrolIndex].position);
-        }
+        navMeshAgent.SetDestination(patrolPoint[patrolIndex].position);
 
         if (navMeshAgent.pathPending) return;
         if (navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance) return;
@@ -353,8 +413,6 @@ public class EnemyController : MonoBehaviour
                 patrolForward = true;
             }
         }
-        navMeshAgent.ResetPath();
-        navMeshAgent.SetDestination(patrolPoint[patrolIndex].position);
         ChangeState(EnemyState.Idle);
     }
 
@@ -441,6 +499,17 @@ public class EnemyController : MonoBehaviour
     {
         if (player == null) return;
 
+        // 플레이어 보기
+        Vector3 lookpos = player.position - transform.position;
+        lookpos.y = 0f;
+
+        if (lookpos.sqrMagnitude > 0.001f)
+        {
+            Quaternion rot = Quaternion.LookRotation(lookpos);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rot, 10f * Time.deltaTime);
+        }
+
+        // 플레이어 놓침
         if (!enemyVision.CanSeePlayer())
         {
             ChangeState(EnemyState.Chase);
@@ -455,8 +524,53 @@ public class EnemyController : MonoBehaviour
             ChangeState(EnemyState.Chase);
             return;
         }
+
+        // 총알 부족
+        if (weaponController.GetCurrentAmmo() <= 0)
+        {
+            enemyCombat.StopAttack();
+            if (weaponController.GetReserveAmmo() > 0)
+            {
+                ChangeState(EnemyState.Reload);
+            }
+            return;
+        }
         // 공격 실행
         enemyCombat.Attack();
+    }
+
+    // 장전 상태
+    private void UpdateReload()
+    {
+        // 최초 진입 시 한번만 실행
+        //Debug.Log("Reload State");
+
+        if (enemyCombat.IsReload())
+        {
+            //Debug.Log("Still Reloading");
+            return;
+        }
+
+        Debug.Log("Reload Finished");
+
+        // 장전 끝
+        if (enemyVision.CanSeePlayer())
+        {
+            float distance = Vector3.Distance(transform.position, player.position);
+
+            if (distance <= enemyCombat.GetAttackDistance())
+            {
+                ChangeState(EnemyState.Attack);
+            }
+            else
+            {
+                ChangeState(EnemyState.Chase);
+            }
+        }
+        else
+        {
+            ChangeState(EnemyState.Search);
+        }
     }
 
     // 복귀 상태
@@ -516,6 +630,18 @@ public class EnemyController : MonoBehaviour
     public void SetPatrolRoute(Transform[] route)
     {
         patrolPoint = route;
+
+        patrolIndex = 0;
+        patrolForward = true;
+
+        if (navMeshAgent != null &&
+            navMeshAgent.enabled &&
+            navMeshAgent.isOnNavMesh &&
+            patrolPoint != null &&
+            patrolPoint.Length > 0)
+        {
+            navMeshAgent.SetDestination(patrolPoint[0].position);
+        }
     }
 
     // 랜덤 수색 위치 설정
@@ -530,6 +656,27 @@ public class EnemyController : MonoBehaviour
         if (NavMesh.SamplePosition(randomPosition, out navMeshHit, searchRange, NavMesh.AllAreas))
         {
             navMeshAgent.SetDestination(navMeshHit.position);
+        }
+    }
+
+    public void OnReload()
+    {
+        if (enemyVision.CanSeePlayer())
+        {
+            float distance = Vector3.Distance(transform.position, player.position);
+
+            if (distance <= enemyCombat.GetAttackDistance())
+            {
+                ChangeState(EnemyState.Attack);
+            }
+            else
+            {
+                ChangeState(EnemyState.Chase);
+            }
+        }
+        else
+        {
+            ChangeState(EnemyState.Search);
         }
     }
 
@@ -558,19 +705,5 @@ public class EnemyController : MonoBehaviour
             animator.SetTrigger("Dead");
         }
         deadTimer = 2f;
-    }
-
-    // 팀데스매치 업데이트
-    private void TDMUpdate()
-    {
-        // 현재는 플레이어 발견 시
-        // 바로 추적 + 공격만 사용
-
-        // 이후 추가 가능:
-        // 리스폰
-        // 팀 AI
-        // 엄폐
-        // 수류탄
-        // 목표 점령
     }
 }

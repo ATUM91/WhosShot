@@ -16,11 +16,9 @@ public class WeaponIK : MonoBehaviour
 
     private void OnAnimatorIK(int layerIndex)
     {
-        if (animator == null) return;
-        if (leftHandTarget == null) return;
-
         animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1f);
-        animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, -0.4f);
+        animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1f);
+
         animator.SetIKPosition(AvatarIKGoal.LeftHand, leftHandTarget.position);
         animator.SetIKRotation(AvatarIKGoal.LeftHand, leftHandTarget.rotation);
     }
