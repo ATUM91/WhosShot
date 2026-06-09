@@ -43,6 +43,7 @@ public class MissionManager : MonoBehaviour
         if (missionCompleted) return;
 
         missionCompleted = true;
+
         StealthUIManager.Instance.ShowSuccess();
     }
 

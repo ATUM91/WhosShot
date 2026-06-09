@@ -62,7 +62,7 @@ public class EnemyController : MonoBehaviour
 
     [Header("발각 게이지")]
     [SerializeField] private float detectMax = 100f;        // 게이지 최대치
-    [SerializeField] private float detectSpeed = 100f;       // 게이지 올라가는 속도
+    [SerializeField] private float detectSpeed = 30f;       // 게이지 올라가는 속도
     [SerializeField] private float detectLoseSpeed = 20f;   // 게이지 내려가는 속도
     #endregion
 
@@ -212,9 +212,9 @@ public class EnemyController : MonoBehaviour
 
             float distance = Vector3.Distance(transform.position, player.position);
             float close = 1f - Mathf.Clamp01(distance / enemyVision.viewDistance); // 거리 비율 (가까움(1) ~ 멈(0))
-            close *= close; // 게이지 상승속도 올리기
+            float detect = Mathf.Lerp(0.3f, 1f, close); // 게이지 상승속도 올리기
 
-            detectGauge += detectSpeed * close * Time.deltaTime;    // 거리 기반 게이지 증가
+            detectGauge += detectSpeed * detect * Time.deltaTime;    // 거리 기반 게이지 증가
         }
 
         else

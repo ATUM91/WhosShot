@@ -62,7 +62,7 @@ public class Target : MonoBehaviour
 
     public float CheckDamage(string hitTag, float baseDamage)
     {
-        if (hitTag == "Head") return baseDamage * 3;
+        if (hitTag == "Head") return baseDamage * 5;
         if (hitTag == "Body") return baseDamage;
         if (hitTag == "Arm") return baseDamage * 0.7f;
         if (hitTag == "Leg") return baseDamage * 0.5f;

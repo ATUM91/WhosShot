@@ -23,6 +23,7 @@ public class StealthUIManager : MonoBehaviour
 
     [Header("탄약 UI")]
     [SerializeField] private TMP_Text ammoText;
+    [SerializeField] private TMP_Text weaponNameText;
 
     [Header("발각 게이지")]
     [SerializeField] private GameObject detectGauge;
@@ -98,11 +99,15 @@ public class StealthUIManager : MonoBehaviour
     }
 
     // 탄약 UI 표시
-    public void UpdateAmmo(int currentAmmo, float reserveAmmo)
+    public void UpdateAmmo(int currentAmmo, float reserveAmmo, string weaponName)
     {
         if (ammoText != null)
         {
             ammoText.text = $"{currentAmmo}/{reserveAmmo}";
+        }
+        if (weaponNameText != null)
+        {
+            weaponNameText.text = weaponName;
         }
     }
     #endregion

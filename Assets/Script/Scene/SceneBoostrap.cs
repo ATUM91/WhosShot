@@ -8,3 +8,4 @@ public class SceneBoostrap : MonoBehaviour
         SceneManager.LoadScene("Scene Title");   
     }
 }
+  

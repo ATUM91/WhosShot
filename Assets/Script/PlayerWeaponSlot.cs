@@ -92,6 +92,17 @@ public class PlayerWeaponSlot : MonoBehaviour
             wc2.PlayEquipSound();
             wc2.ApplyAnimator(animator);
         }
+
+        // UI °»½Å (ÇöÀç Åº¼ö / ¿¹ºñ Åº¼ö / ¹«±â ÀÌ¸§)
+        if (currentWeapon != null)
+        {
+            StealthUIManager.Instance.UpdateAmmo
+                (
+                    currentWeapon.GetCurrentAmmo(), 
+                    currentWeapon.GetReserveAmmo(), 
+                    currentWeapon.GetWeaponData().weaponName
+                );
+        }
     }
 
     // ½½·Ô1 ÀåÂø

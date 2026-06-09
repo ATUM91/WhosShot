@@ -136,7 +136,7 @@ public class WeaponController : MonoBehaviour
 
         if (GetComponentInParent<PlayerController>() != null)
         {
-            StealthUIManager.Instance?.UpdateAmmo(currentAmmo, reserveAmmo);
+            StealthUIManager.Instance?.UpdateAmmo(currentAmmo, reserveAmmo,weaponData.weaponName);
         }
     }
 
@@ -162,7 +162,7 @@ public class WeaponController : MonoBehaviour
 
         if (GetComponentInParent<PlayerController>() != null)
         {
-            StealthUIManager.Instance?.UpdateAmmo(currentAmmo, reserveAmmo);
+            StealthUIManager.Instance?.UpdateAmmo(currentAmmo, reserveAmmo, weaponData.weaponName);
         }
         Debug.Log($"장전 완료 / 탄창 : {currentAmmo}발 / 예비탄 : {reserveAmmo}발");
     }
@@ -184,12 +184,17 @@ public class WeaponController : MonoBehaviour
             ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f)); // 화면 중앙 Ray
         }
 
-        // AI
+        // AI / 거리 기반 명중률 적용
         else
         {
             if (target != null)
             {
-                Vector3 targetPos = target.position + Vector3.up * 1.4f;
+                float distance = Vector3.Distance(muzzlePoint.position, target.position);
+                float miss = distance * 0.15f;
+
+                Vector3 targetPos = target.position + Vector3.up * 1.0f;
+                
+                targetPos += new Vector3(Random.Range(-miss, miss), Random.Range(-miss * 0.5f, miss * 0.5f), Random.Range(-miss, miss));
                 Vector3 shootDir = (targetPos - muzzlePoint.position).normalized;
                 ray = new Ray(muzzlePoint.position, shootDir);
             }

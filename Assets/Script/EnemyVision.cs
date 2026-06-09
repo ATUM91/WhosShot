@@ -9,10 +9,10 @@ public class EnemyVision : MonoBehaviour
 {
     [Header("플레이어 감지")]
     [SerializeField] public float viewDistance = 15f;
-    [SerializeField] private float viewAngle = 200f;
+    [SerializeField] private float viewAngle = 180f;
 
     [Header("시체 감지")]
-    [SerializeField] private float deadBodyCheckRange = 8f;
+    [SerializeField] private float deadBodyCheckDistance = 10f;
     [SerializeField] private LayerMask deadBodyMask;
 
     [Header("감지 끊김 방지")]
@@ -54,7 +54,7 @@ public class EnemyVision : MonoBehaviour
         deadBodyPosition = Vector3.zero;
 
         // 범위 내 시체 검색
-        Collider[] deadBody = Physics.OverlapSphere(transform.position, deadBodyCheckRange, deadBodyMask);
+        Collider[] deadBody = Physics.OverlapSphere(transform.position, deadBodyCheckDistance, deadBodyMask);
 
         // 시체 없음
         if (deadBody == null || deadBody.Length == 0) return false;
@@ -94,7 +94,7 @@ public class EnemyVision : MonoBehaviour
         // 최종 시체 없음
         if (closestBody == null) return false;
 
-        if (!CanSeeTarget(closestBody.position, deadBodyCheckRange)) return false;
+        if (!CanSeeTarget(closestBody.position, deadBodyCheckDistance)) return false;
 
         // 시체 위치 반환
         deadBodyPosition = closestBody.position;

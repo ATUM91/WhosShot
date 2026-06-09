@@ -16,8 +16,8 @@ MonoBehaviour:
   weaponType: 1
   weaponPrefab: {fileID: 8231352678144625343, guid: cd0b612594a45a34492dffc670308580, type: 3}
   weaponIcon: {fileID: 21300000, guid: 7cccea92c415a3f4da988b75235c731c, type: 3}
-  damage: 35
-  fireRate: 0.2
+  damage: 21
+  fireRate: 0.1
   range: 50
   magazineAmmo: 30
   maxReserveAmmo: 90
