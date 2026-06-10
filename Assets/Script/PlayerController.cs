@@ -364,6 +364,23 @@ public class PlayerController : MonoBehaviour
         {
             GameObject hitObject = hit.collider.gameObject;
             Transform root = hit.collider.transform.root;
+            GimmickButton gimmickButton = hit.collider.GetComponent<GimmickButton>();
+
+            // 기믹 버튼
+            if (gimmickButton != null)
+            {
+                // 이미 열려있다면 상호작용 비활성화 시킴
+                if (gimmickButton.GetDoor().IsOpen()) return;
+
+                canInteract = true;
+                stealthUIManager.ShowInteraction("[E] 문열기 버튼");
+
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    gimmickButton.Press();
+                }
+                return;
+            }
 
             // C4
             if (hitObject.CompareTag("Mission_C4"))
